@@ -38,6 +38,32 @@ const PrivateNavbar = () => {
     navigate("/login", { replace: true });
   };
 
+   useEffect(() => {
+    const fetchUser = async () => {
+      if (!user?.email) return;
+      try {
+        const res = await API.get("/profile");
+        const verifiedFromApi = resolveEmailVerified(res.data, resolveEmailVerified(user));
+        const refreshedUser = {
+          ...user,
+          ...res.data,
+          emailVerified: verifiedFromApi,
+        };
+        setUser(refreshedUser);
+        setEmailVerified(verifiedFromApi);
+        if (verifiedFromApi) {
+          setShowOtpInput(false);
+          setOtp("");
+        }
+        localStorage.setItem("user", JSON.stringify(refreshedUser));
+      } catch (err) {
+        console.error("Failed to fetch user info:", err);
+      }
+    };
+    fetchUser();
+  }, []);
+
+
 
 
   return (
