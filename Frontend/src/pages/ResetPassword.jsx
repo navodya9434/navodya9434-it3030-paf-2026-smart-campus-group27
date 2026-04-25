@@ -47,6 +47,17 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
 
 
+   const getErrorMessage = (err, fallback) => {
+    if (err?.response?.data?.message) {
+      return err.response.data.message;
+    }
+    if (typeof err?.response?.data === "string") {
+      return err.response.data;
+    }
+    return fallback;
+  };
+
+
   return (
     <div
       className="relative min-h-screen flex items-center justify-center px-4 py-6"
