@@ -59,6 +59,28 @@ const formatRoleLabel = (role) => {
     .join(" ");
 };
 
+const formatAuthProviderLabel = (provider) => {
+  if (!provider || typeof provider !== "string") {
+    return "Local";
+  }
+
+  const normalizedProvider = provider.trim().toUpperCase();
+  if (normalizedProvider === "GOOGLE") {
+    return "Google";
+  }
+
+  if (normalizedProvider === "LOCAL") {
+    return "Local";
+  }
+
+  return provider
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
+
   const formatRole = (role) =>
     role.replace("ROLE_", "").toLowerCase();
 
