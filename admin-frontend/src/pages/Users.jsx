@@ -21,12 +21,11 @@ const Users = () => {
   { value: "ROLE_USER", label: "User" },
 ];
 
-  const filteredUsers = users;
-
-  const totalUsers = users.length;
-  const activeUsers = users.filter((u) => u.isActive).length;
-  const inactiveUsers = users.filter((u) => !u.isActive).length;
-  const verifiedUsers = users.filter((u) => u.isAccountVerified).length;
+const DEFAULT_ROLE_FILTER_OPTIONS = [
+  "ROLE_TICKET_MANAGER",
+  "ROLE_FACILITIES_MANAGER",
+  "ROLE_FACILITY_MANAGER",
+];
 
   const formatRole = (role) =>
     role.replace("ROLE_", "").toLowerCase();
