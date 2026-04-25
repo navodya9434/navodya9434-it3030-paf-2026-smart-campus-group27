@@ -81,6 +81,32 @@ const PrivateNavbar = () => {
     }
   };
 
+   const handleOtpVerify = async () => {
+    if (emailVerified) {
+      setShowOtpInput(false);
+      setOtp("");
+      toast("Email is already verified");
+      return;
+    }
+
+    if (otp.length < 6) return toast.error("Enter full 6-digit OTP");
+    setVerifying(true);
+    try {
+      await API.post("/verify-otp", { email: user.email, otp });
+      toast.success("Email verified successfully!");
+      const updatedUser = { ...user, emailVerified: true };
+      setUser(updatedUser);
+      setEmailVerified(true);
+      setShowOtpInput(false);
+      setOtp("");
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+    } catch (err) {
+      toast.error(err.response?.data || "Invalid OTP");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
 
 
   return (
