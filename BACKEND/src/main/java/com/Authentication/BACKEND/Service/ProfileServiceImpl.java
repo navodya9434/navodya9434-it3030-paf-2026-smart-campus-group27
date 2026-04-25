@@ -145,19 +145,7 @@ public class ProfileServiceImpl implements ProfileService {
         userRepository.save(existingUser);
     }
 
-
-
-
-
-
-   
-
-   
-      
-   
-    
-
-    private ProfileResponse convertToProfileResponse(UserEntity newProfile) {
+     private ProfileResponse convertToProfileResponse(UserEntity newProfile) {
         return ProfileResponse.builder()
                 .name(newProfile.getName())
                 .email(newProfile.getEmail())
