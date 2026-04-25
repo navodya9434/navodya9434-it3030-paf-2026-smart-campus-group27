@@ -28,6 +28,20 @@ const OAuth2Success = () => {
       return;
     }
 
+     const oauthUser = {
+      token,
+      email,
+      role,
+      provider,
+      name,
+      googleId,
+      emailVerified: true,
+    };
+     localStorage.setItem("user", JSON.stringify(oauthUser));
+    toast.success("Google login successful!");
+    navigate("/dashboard", { replace: true });
+  }, [navigate, searchParams]);
+
 
    return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 text-center">
