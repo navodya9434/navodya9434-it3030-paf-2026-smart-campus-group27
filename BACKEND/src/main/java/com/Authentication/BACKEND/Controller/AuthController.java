@@ -168,5 +168,19 @@ public class AuthController {
             }
         }
 
+         @PostMapping("/verify-otp")
+           public void verifyEmail(@RequestBody Map<String, Object> request,@CurrentSecurityContext(expression = "authentication?.name")String authName) {
+          Object otpValue = request.get("otp");
+          if (otpValue == null || otpValue.toString().isBlank()) {
+              throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Missing OTP");
+        }
+             try {
+                   String requestedEmail = request.get("email") == null ? null : request.get("email").toString();
+                   profileService.verifyOtp(resolveEmailForOtp(authName, requestedEmail), otpValue.toString());
+             } catch (Exception e) {
+                   throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,e.getMessage());
+             }
+        }
+
 
 }
