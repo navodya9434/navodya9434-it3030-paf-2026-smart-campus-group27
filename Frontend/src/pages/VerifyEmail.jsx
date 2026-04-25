@@ -51,6 +51,36 @@ const VerifyEmail = () => {
   };
 
 
+   const handleVerify = async (e) => {
+    e.preventDefault();
+
+    if (otp.length !== 6) {
+      toast.error("Enter a valid 6-digit OTP");
+      return;
+    }
+
+    setVerifyingOtp(true);
+    try {
+      await API.post("/verify-otp", { email: storedUser.email, otp });
+
+      const updatedUser = {
+        ...storedUser,
+        emailVerified: true,
+        isAccountVerified: true,
+      };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      toast.success("Email verified successfully");
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      const message = err?.response?.data?.message || err?.response?.data || "Invalid or expired OTP";
+      toast.error(message);
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+
 
   return (
     <div
