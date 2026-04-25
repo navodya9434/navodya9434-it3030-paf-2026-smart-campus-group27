@@ -73,6 +73,12 @@ public class AuthController {
         return handleLogin(request, false);
     }
 
+     @PostMapping("/admin/login")
+    public ResponseEntity<?> adminLogin(@RequestBody AuthRequest request) {
+        return handleLogin(request, true);
+    }
+
+
 
   
 
