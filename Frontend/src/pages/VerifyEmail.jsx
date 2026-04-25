@@ -12,6 +12,9 @@ const VerifyEmail = () => {
   }, []);
 
   const [otp, setOtp] = useState("");
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+
 
   return (
     <div
