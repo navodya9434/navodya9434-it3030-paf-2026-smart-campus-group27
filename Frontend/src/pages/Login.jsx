@@ -19,6 +19,18 @@ const Login = () => {
     !form.password.trim() ||
     (!isLogin && !form.name.trim());
 
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    if (error) {
+      setError("");
+    }
+    if (success) {
+      setSuccess("");
+    }
+  };
+
+
+
 
   return (
     <div
