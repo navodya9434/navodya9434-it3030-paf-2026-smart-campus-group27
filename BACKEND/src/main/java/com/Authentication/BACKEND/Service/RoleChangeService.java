@@ -25,6 +25,19 @@ public class RoleChangeService {
                 });
     }
 
+     public void updateUserRole(String userId, Role role) {
+        UserEntity user = findUserByIdentifier(userId);
+
+        //  prevent changing another admin
+        if(user.getRole() == Role.ROLE_ADMIN) {
+            throw new RuntimeException("Cannot modify admin");
+        }
+
+        user.setRole(role);
+        userRepository.save(user);
+    }
+
+
    
 
    
