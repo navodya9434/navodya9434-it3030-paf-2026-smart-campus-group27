@@ -59,6 +59,15 @@ public class RoleChangeService {
         userRepository.save(user);
     }
 
+    public void deleteUser(String userId) {
+        UserEntity user = findUserByIdentifier(userId);
+
+        if (user.getRole() == Role.ROLE_ADMIN) {
+            throw new RuntimeException("Cannot delete admin");
+        }
+
+        userRepository.delete(user);
+    }
 
    
 
