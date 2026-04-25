@@ -62,6 +62,18 @@ const Users = () => {
   const roleFilterOptions = Array.from(
     new Set([...DEFAULT_ROLE_FILTER_OPTIONS, ...availableRoles])
   );
+ const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      !normalizedSearchTerm ||
+      user.name?.toLowerCase().includes(normalizedSearchTerm) ||
+      user.email?.toLowerCase().includes(normalizedSearchTerm);
+
+    const matchesRole =
+      selectedRole === "all" ||
+      user.role?.toLowerCase() === selectedRole.toLowerCase();
+
+    return matchesSearch && matchesRole;
+  });
 
 
 
