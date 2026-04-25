@@ -78,6 +78,54 @@ public class AuthController {
         return handleLogin(request, true);
     }
 
+    private ResponseEntity<?> handleLogin(AuthRequest request, boolean adminOnly) {
+        try {
+            UserEntity user = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new BadCredentialsException("Email or password is incorrect"));
+
+            if (adminOnly) {
+                if (user.getRole() != Role.ROLE_ADMIN) {
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("error", true);
+                    error.put("message", "Only admin email can login here");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+                }
+            }
+
+            authenticate(request.getEmail(), request.getPassword());
+            final UserDetails userDetails = appUserDetailsService.loadUserByUsername(request.getEmail());
+            final String jwtToken = jwtUtil.generateToken(userDetails);
+            ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
+                    .httpOnly(true)
+                    .path("/")
+                    .maxAge(Duration.ofDays(1))
+                    .sameSite("Strict")
+                    .build();
+
+                String provider = user.getAuthProvider();
+                if (provider == null || provider.isBlank()) {
+                provider = "LOCAL";
+                }
+
+            return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(new AuthResponse(request.getEmail(), jwtToken, user.getRole().name(), provider.toUpperCase(), user.getIsAccountVerified()));
+        } catch (BadCredentialsException ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", "Email or password is incorrect");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (DisabledException ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", "Account disabled");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        } catch (Exception ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", "Authentication Failed");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+    }
 
 
   
