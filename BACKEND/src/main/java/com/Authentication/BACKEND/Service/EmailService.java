@@ -12,12 +12,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EmailService {
 
-     private final JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
 
-      @Value("${spring.mail.properties.mail.smtp.from}")
-      private String fromEmail;
+    @Value("${spring.mail.properties.mail.smtp.from}")
+    private String fromEmail;
 
-       // Welcome Email remains plain text
+    // Welcome Email remains plain text
     public void sendWelcomeEmail(String toEmail, String name) {
         MimeMessage message = mailSender.createMimeMessage();
         try {
@@ -48,7 +48,7 @@ public class EmailService {
         }
     }
 
-        // Reset OTP Email (HTML)
+    // Reset OTP Email (HTML)
     public void sendResetOtpEmail(String toEmail, String otp) {
         MimeMessage message = mailSender.createMimeMessage();
         try {
@@ -72,8 +72,8 @@ public class EmailService {
             e.printStackTrace();
         }
     }
-  
-      // Account Verification Email (HTML)
+
+    // Account Verification Email (HTML)
     public void sendAccountVerificationEmail(String toEmail, String otp) {
         MimeMessage message = mailSender.createMimeMessage();
         try {
@@ -99,9 +99,4 @@ public class EmailService {
             e.printStackTrace();
         }
     }
-
-
-
-
-
 }
