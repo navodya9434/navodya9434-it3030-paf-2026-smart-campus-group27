@@ -33,6 +33,12 @@ const PrivateNavbar = () => {
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+   const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/login", { replace: true });
+  };
+
+
 
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 shadow-[0_8px_30px_rgba(15,23,42,0.08)] backdrop-blur-md">
