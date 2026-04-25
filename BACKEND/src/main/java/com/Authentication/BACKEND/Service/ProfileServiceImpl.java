@@ -49,6 +49,32 @@ public class ProfileServiceImpl implements ProfileService {
       return convertToProfileResponse(existingUser);
     }
 
+     @Override
+    public void sendResetOtp(String email) {
+    UserEntity existingEntity = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found : " + email));
+
+    //Generate 6 digit otp
+        String otp = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
+
+
+        //calculate expiry time(current time + 10 minutes in milliseconds)
+     long expiryTime = System.currentTimeMillis() + (10 * 60 * 1000);
+
+     //update user entity with otp and expiry time
+     existingEntity.setResetOtp(otp);
+     existingEntity.setResetOtpExpiredAt(expiryTime);
+     userRepository.save(existingEntity);
+
+      try {
+            //send otp to user email
+            emailService.sendResetOtpEmail(existingEntity.getEmail(), otp);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send OTP email");
+      }
+    }
+
      
 
 
