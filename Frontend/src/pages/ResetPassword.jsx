@@ -57,6 +57,22 @@ const ResetPassword = () => {
     return fallback;
   };
 
+   //  Send OTP
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    if (!email.trim()) return toast.error("Email is required!");
+    setLoading(true);
+    try {
+      await API.post(`/send-reset-otp?email=${email}`, { email });
+      toast.success("OTP sent to your email!");
+      setStep(2);
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to send OTP"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <div
