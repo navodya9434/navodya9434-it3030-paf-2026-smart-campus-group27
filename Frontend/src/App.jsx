@@ -23,6 +23,12 @@ const App = () => {
     return value === true || value === "true";
   };
 
+   const hasVerifiedUser = user && isEmailVerified(user);
+
+  // Decide whether to show navbar
+  const showNavbar = !hideNavbarPaths.includes(location.pathname);
+  const showFooter = !hideFooterPaths.includes(location.pathname);
+
 
   return (
     <div>
