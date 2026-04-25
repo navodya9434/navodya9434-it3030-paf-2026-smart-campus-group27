@@ -46,6 +46,19 @@ const getAuthHeaders = () => {
   };
 };
 
+const formatRoleLabel = (role) => {
+  if (!role) {
+    return "-";
+  }
+
+  return role
+    .replace("ROLE_", "")
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
   const formatRole = (role) =>
     role.replace("ROLE_", "").toLowerCase();
 
