@@ -131,6 +131,11 @@ const Login = () => {
          navigate("/reset-password");
   };
 
+  const handleGoogleLogin = () => {
+    const googleLoginUrl = `${API.defaults.baseURL}/oauth2/authorization/google`;
+    window.location.href = googleLoginUrl;
+  };
+
 
 
   return (
