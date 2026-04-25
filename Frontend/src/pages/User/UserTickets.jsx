@@ -13,10 +13,9 @@ const readTicketNotifications = () => {
   }
 };
 
-
 export default function UserTickets() {
   const [tickets, setTickets] = useState([]);
-  const [commentsMap, setCommentsMap] = useState({}); // ✅ NEW
+  const [commentsMap, setCommentsMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -32,7 +31,6 @@ export default function UserTickets() {
   });
 
   const [errors, setErrors] = useState({});
-
   const [commentInputs, setCommentInputs] = useState({});
 
   useEffect(() => {
@@ -45,8 +43,6 @@ export default function UserTickets() {
       const { data } = await API.get("/tickets/my");
       const ticketList = Array.isArray(data) ? data : data.data || [];
       setTickets(ticketList);
-
-      // ✅ LOAD COMMENTS FOR EACH TICKET
       ticketList.forEach((t) => loadComments(t.id));
     } catch (err) {
       console.error(err);
@@ -56,14 +52,10 @@ export default function UserTickets() {
     }
   };
 
-  // ✅ NEW: LOAD COMMENTS
   const loadComments = async (ticketId) => {
     try {
       const { data } = await API.get(`/tickets/${ticketId}/comments`);
-      setCommentsMap((prev) => ({
-        ...prev,
-        [ticketId]: data,
-      }));
+      setCommentsMap((prev) => ({ ...prev, [ticketId]: data }));
     } catch (err) {
       console.error(err);
     }
@@ -71,13 +63,11 @@ export default function UserTickets() {
 
   const validate = () => {
     const newErrors = {};
-
     if (!form.title) newErrors.title = "Title required";
     if (!form.location) newErrors.location = "Location required";
     if (!form.category) newErrors.category = "Category required";
     if (!form.contact) newErrors.contact = "Email required";
     if (!form.description) newErrors.description = "Description required";
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -88,7 +78,6 @@ export default function UserTickets() {
 
   const handleImages = (e) => {
     const files = Array.from(e.target.files).slice(0, 3);
-
     const promises = files.map((file) => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -106,6 +95,7 @@ export default function UserTickets() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
+
     setSubmitError("");
     setSubmitLoading(true);
 
@@ -176,10 +166,8 @@ export default function UserTickets() {
 
     try {
       await API.post(`/tickets/${ticketId}/comment`, { message });
-
       setCommentInputs({ ...commentInputs, [ticketId]: "" });
-
-      loadComments(ticketId); // ✅ reload only that ticket comments
+      loadComments(ticketId);
     } catch (err) {
       console.error(err);
     }
@@ -193,7 +181,6 @@ export default function UserTickets() {
       await API.put(`/tickets/comment/${commentId}`, {
         message: newMessage,
       });
-
       loadComments(ticketId);
     } catch (err) {
       console.error(err);
@@ -217,181 +204,154 @@ export default function UserTickets() {
     (t) => t.status === "RESOLVED" || t.status === "REJECTED"
   );
 
+  const TicketCard = ({ t }) => (
+    <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-5 shadow-lg backdrop-blur-xl w-full max-w-md h-[520px] flex flex-col justify-between">
+
+      <div>
+        <h3 className="font-bold text-white">{t.title}</h3>
+        <p className="text-slate-300 text-sm mt-1">📍 {t.location}</p>
+        <p className="text-xs mt-1 text-cyan-300">{t.status}</p>
+
+        {/* FIXED IMAGE GRID */}
+        {t.imageUrls?.length > 0 && (
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            {t.imageUrls.slice(0, 3).map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                className="w-full h-20 object-cover rounded-lg border border-slate-600"
+              />
+            ))}
+          </div>
+        )}
+
+        {/* COMMENTS */}
+        <div className="mt-3 max-h-32 overflow-y-auto">
+          {commentsMap[t.id]?.map((c) => {
+            const isAdmin = c.userName?.includes("admin");
+
+            return (
+              <div
+                key={c.id}
+                className={`mt-1 p-2 rounded text-xs ${
+                  isAdmin
+                    ? "bg-slate-800 border"
+                    : "ml-4 bg-slate-700 border-l-4 border-purple-400"
+                }`}
+              >
+                <b>{c.userName}</b>: {c.message}
+
+                {!isAdmin && (
+                  <div className="mt-1">
+                    <button
+                      className="text-blue-400 mr-2"
+                      onClick={() => editComment(c.id, c.message, t.id)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="text-red-400"
+                      onClick={() => removeComment(c.id, t.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <input
+          placeholder="Add comment..."
+          value={commentInputs[t.id] || ""}
+          onChange={(e) =>
+            setCommentInputs({
+              ...commentInputs,
+              [t.id]: e.target.value,
+            })
+          }
+          className="mt-2 w-full p-2 rounded bg-slate-800 border border-slate-600 text-white text-sm"
+        />
+
+        <button
+          onClick={() => addComment(t.id)}
+          className="mt-1 bg-cyan-500 px-3 py-1 rounded text-sm"
+        >
+          Post
+        </button>
+      </div>
+
+      <button
+        onClick={() => deleteTicket(t.id)}
+        className="mt-3 bg-red-500 text-white px-4 py-2 rounded-lg"
+      >
+        Delete
+      </button>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-linear-to-br from-purple-100 via-blue-100 to-cyan-100">
-      <div className="w-[92%] mx-auto grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-10 py-10">
+    <div className="min-h-screen text-white bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900">
 
-        {/* LEFT SIDE FORM (UNCHANGED) */}
-        <div className="bg-white p-8 rounded-3xl shadow-2xl border-2 border-purple-200 sticky top-24 h-fit">
-          <h2 className="text-2xl font-extrabold text-center mb-6 bg-linear-to-r from-purple-600 to-pink-500 text-transparent bg-clip-text">
-            Create Ticket
-          </h2>
+      <div className="px-6 py-5 border-b border-slate-700 bg-slate-950/60 backdrop-blur-xl">
+        <h1 className="text-2xl font-bold">My Tickets</h1>
+        <p className="text-slate-400 text-sm">Manage your submitted tickets</p>
+      </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {submitError && (
-              <p className="text-red-600 bg-red-50 border border-red-200 p-2 rounded-lg">
-                {submitError}
-              </p>
-            )}
+      <div className="w-[92%] mx-auto grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-10 py-10">
 
-            <input name="title" placeholder="Title" value={form.title} onChange={handleChange} className="p-4 border rounded-xl" />
-            {errors.title && <p className="text-red-500">{errors.title}</p>}
+        {/* FORM */}
+        <div className="bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-xl sticky top-24 h-fit">
+          <h2 className="text-xl font-bold mb-4">Create Ticket</h2>
 
-            <input name="location" placeholder="Location" value={form.location} onChange={handleChange} className="p-4 border rounded-xl" />
-            {errors.location && <p className="text-red-500">{errors.location}</p>}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
 
-            <select name="category" onChange={handleChange} className="p-4 border rounded-xl">
-              <option value="">Select Category</option>
+            <input name="title" placeholder="Title" value={form.title} onChange={handleChange} className="p-3 bg-slate-800 border border-slate-700 rounded" />
+            <input name="location" placeholder="Location" value={form.location} onChange={handleChange} className="p-3 bg-slate-800 border border-slate-700 rounded" />
+
+            <select name="category" onChange={handleChange} className="p-3 bg-slate-800 border border-slate-700 rounded">
+              <option value="">Category</option>
               <option>Equipment</option>
               <option>Furniture</option>
               <option>Network</option>
               <option>Other</option>
             </select>
 
-            <select name="priority" onChange={handleChange} className="p-4 border rounded-xl">
+            <select name="priority" onChange={handleChange} className="p-3 bg-slate-800 border border-slate-700 rounded">
               <option>LOW</option>
               <option>MEDIUM</option>
               <option>HIGH</option>
             </select>
 
-            <input name="contact" placeholder="Email" value={form.contact} onChange={handleChange} className="p-4 border rounded-xl" />
+            <input name="contact" placeholder="Email" value={form.contact} onChange={handleChange} className="p-3 bg-slate-800 border border-slate-700 rounded" />
 
-            <textarea name="description" placeholder="Description" value={form.description} onChange={handleChange} className="p-4 border rounded-xl h-32" />
+            <textarea name="description" placeholder="Description" value={form.description} onChange={handleChange} className="p-3 bg-slate-800 border border-slate-700 rounded h-24" />
 
             <input type="file" multiple accept="image/*" onChange={handleImages} />
 
-            <button type="submit" disabled={submitLoading} className="bg-linear-to-r from-purple-600 via-pink-500 to-cyan-500 text-white font-bold p-4 rounded-xl hover:scale-105 transition">
-              {submitLoading ? "Submitting..." : "Submit Ticket"}
+            <button type="submit" className="bg-blue-600 p-3 rounded font-bold">
+              {submitLoading ? "Submitting..." : "Submit"}
             </button>
           </form>
         </div>
 
-        {/* RIGHT SIDE */}
-        <div className="flex flex-col gap-10">
+        {/* TICKETS */}
+        <div>
 
-          {/* ACTIVE */}
-          <div>
-            <h2 className="text-2xl font-bold mb-4 text-purple-700">
-              Active Tickets ({activeTickets.length})
-            </h2>
+          <h2 className="text-xl font-bold mb-4 text-cyan-300">Active Tickets</h2>
 
-            {loading ? (
-              <p>Loading...</p>
-            ) : (
-              activeTickets.map((t) => (
-                <div key={t.id} className="bg-white p-6 rounded-2xl shadow-lg border mb-4">
-
-                  <h3 className="text-lg font-bold text-purple-700">{t.title}</h3>
-                  <p>{t.location}</p>
-                  <p>Status: <b>{t.status}</b></p>
-
-                  {t.imageUrls?.map((img, i) => (
-                    <img key={i} src={img} className="rounded-xl mt-2 max-w-full" />
-                  ))}
-
-                  {/* COMMENTS */}
-                  <div className="mt-4">
-                    <h4 className="font-bold">Comments</h4>
-
-                    {commentsMap[t.id]?.map((c) => {
-                      const isAdmin = c.userName?.includes("admin"); // 🔥 simple detection
-
-                      return (
-                        <div
-                          key={c.id}
-                          className={`mt-2 p-2 rounded ${
-                            isAdmin
-                              ? "bg-blue-50 ml-6 border-l-4 border-blue-400"
-                              : "border"
-                          }`}
-                        >
-                          <p>
-                            <b>{c.userName}</b>: {c.message}
-                          </p>
-
-                          {!isAdmin && (
-                            <>
-                              <button
-                                className="text-blue-500 text-xs mr-2"
-                                onClick={() =>
-                                  editComment(c.id, c.message, t.id)
-                                }
-                              >
-                                Edit
-                              </button>
-
-                              <button
-                                className="text-red-500 text-xs"
-                                onClick={() =>
-                                  removeComment(c.id, t.id)
-                                }
-                              >
-                                Delete
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    <input
-                      placeholder="Add comment..."
-                      value={commentInputs[t.id] || ""}
-                      onChange={(e) =>
-                        setCommentInputs({
-                          ...commentInputs,
-                          [t.id]: e.target.value,
-                        })
-                      }
-                      className="border p-2 rounded w-full mt-2"
-                    />
-
-                    <button
-                      onClick={() => addComment(t.id)}
-                      className="mt-2 bg-blue-500 text-white px-3 py-1 rounded"
-                    >
-                      Post
-                    </button>
-                  </div>
-
-                  <button onClick={() => deleteTicket(t.id)} className="mt-4 bg-red-500 text-white px-4 py-2 rounded-xl">
-                    Delete
-                  </button>
-
-                </div>
-              ))
-            )}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {activeTickets.map((t) => (
+              <TicketCard key={t.id} t={t} />
+            ))}
           </div>
 
-          {/* PAST */}
-          <div>
-            <h2 className="text-2xl font-bold mb-4 text-pink-600">
-              Past Tickets ({pastTickets.length})
-            </h2>
+          <h2 className="text-xl font-bold mt-10 mb-4 text-pink-400">Past Tickets</h2>
 
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {pastTickets.map((t) => (
-              <div key={t.id} className="bg-white p-6 rounded-2xl shadow-lg border mb-4">
-
-                <h3 className="font-bold">{t.title}</h3>
-                <p>{t.location}</p>
-
-                <span className="inline-block mt-2 px-3 py-1 rounded-full bg-gray-200">
-                  {t.status}
-                </span>
-
-                {commentsMap[t.id]?.map((c) => (
-                  <div key={c.id} className="border p-2 rounded mt-2">
-                    <p><b>{c.userName}</b>: {c.message}</p>
-                  </div>
-                ))}
-
-                {t.rejectionReason && (
-                  <p className="mt-3 text-red-600 bg-red-100 p-2 rounded-lg">
-                    {t.rejectionReason}
-                  </p>
-                )}
-
-              </div>
+              <TicketCard key={t.id} t={t} />
             ))}
           </div>
 
