@@ -128,6 +128,64 @@ const Users = () => {
       setUpdatingUserId("");
     }
   };
+ const handleUserAction = async ({ user, action }) => {
+    const targetUserId = resolveUserIdentifier(user);
+
+    if (!targetUserId) {
+      setActionMessage("Unable to process request: invalid user id");
+      return;
+    }
+
+    setActionUserId(String(targetUserId));
+    setActionMessage("");
+
+    try {
+      const headers = getAuthHeaders();
+
+      let endpoint = "";
+      let method = "PUT";
+      const encodedUserId = encodeURIComponent(targetUserId);
+
+      if (action === "activate") {
+        endpoint = `${API_BASE_URL}/admin/users/${encodedUserId}/activate`;
+      } else if (action === "deactivate") {
+        endpoint = `${API_BASE_URL}/admin/users/${encodedUserId}/deactivate`;
+      } else if (action === "delete") {
+        endpoint = `${API_BASE_URL}/admin/users/${encodedUserId}`;
+        method = "DELETE";
+      } else {
+        throw new Error("Unsupported user action");
+      }
+
+      const response = await fetch(endpoint, {
+        method,
+        headers,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          response.status === 401 || response.status === 403
+            ? "Unauthorized: admin access required"
+            : await getResponseErrorMessage(response, `Failed to ${action} user`)
+        );
+      }
+
+      await fetchUsers();
+
+      setActionMessage(
+        action === "delete"
+          ? `User deleted: ${user.name || user.email || targetUserId}`
+          : `${action === "activate" ? "Activated" : "Deactivated"} ${
+              user.name || user.email || "user"
+            }`
+      );
+    } catch (err) {
+      setActionMessage(err.message || "Unable to process user action");
+    } finally {
+      setActionUserId("");
+    }
+  };
 
 
   const MANAGER_ROLE_OPTIONS = [
