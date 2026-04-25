@@ -13,6 +13,13 @@ const Login = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+
+  const isSubmitDisabled =
+    !form.email.trim() ||
+    !form.password.trim() ||
+    (!isLogin && !form.name.trim());
+
+
   return (
     <div
       className="relative min-h-screen flex items-center justify-center px-4 py-6"
