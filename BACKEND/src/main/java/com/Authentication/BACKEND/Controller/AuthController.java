@@ -67,6 +67,13 @@ public class AuthController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unable to resolve user email for OTP verification");
     }
 
+
+      @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
+        return handleLogin(request, false);
+    }
+
+
   
 
 }
