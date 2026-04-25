@@ -31,7 +31,11 @@ public class ProfileController {
         return response;
     }
 
-
+  
+//    @GetMapping("/test")
+//    public String test() {
+//         return "Auth is Working";
+//    }
 
    
 
