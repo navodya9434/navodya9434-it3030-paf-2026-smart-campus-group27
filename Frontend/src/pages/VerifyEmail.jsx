@@ -2,6 +2,15 @@ import React, { useState } from "react";
 import { logo_back } from "../assets/assets";
 
 const VerifyEmail = () => {
+  const navigate = useNavigate();
+  const storedUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user"));
+    } catch {
+      return null;
+    }
+  }, []);
+
   const [otp, setOtp] = useState("");
 
   return (
