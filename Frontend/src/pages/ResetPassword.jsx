@@ -41,6 +41,11 @@ const OTPInput = ({ length = 6, value, onChange }) => {
 
 const ResetPassword = () => {
   const [step, setStep] = useState(1); // only UI toggle
+   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
 
   return (
     <div
