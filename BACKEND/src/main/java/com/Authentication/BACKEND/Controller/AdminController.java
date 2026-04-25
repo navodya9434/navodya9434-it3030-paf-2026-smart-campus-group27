@@ -33,66 +33,12 @@ public class AdminController {
         }
     }
 
-    @GetMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<AdminUserResponse> getAllUsers() {
-        return userRepository.findAll()
-                .stream()
-                .map(this::mapToAdminUserResponse)
-                .toList();
-    }
+ 
+  
+   
+   
 
-    private AdminUserResponse mapToAdminUserResponse(UserEntity user) {
-        String provider = user.getAuthProvider();
-        if (provider == null || provider.isBlank()) {
-            provider = "LOCAL";
-        }
-
-        return AdminUserResponse.builder()
-                .id(user.getId())
-                .userId(user.getUserId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .isAccountVerified(user.getIsAccountVerified())
-                .isActive(user.getIsActive())
-                .role(user.getRole())
-                .authProvider(provider.toUpperCase(Locale.ROOT))
-                .createdAt(user.getCreatedAt())
-                .build();
-    }
-
-    @PutMapping("/users/{userId}/activate")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> activateUser(@PathVariable String userId) {
-        try {
-            roleChangeService.activateUser(userId);
-            return ResponseEntity.ok("User activated successfully");
-        } catch (RuntimeException ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
-    }
-
-    @PutMapping("/users/{userId}/deactivate")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deactivateUser(@PathVariable String userId) {
-        try {
-            roleChangeService.deactivateUser(userId);
-            return ResponseEntity.ok("User deactivated successfully");
-        } catch (RuntimeException ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
-    }
-
-    @DeleteMapping("/users/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deleteUser(@PathVariable String userId) {
-        try {
-            roleChangeService.deleteUser(userId);
-            return ResponseEntity.ok("User deleted successfully");
-        } catch (RuntimeException ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
-    }
+   
 
 
 }
