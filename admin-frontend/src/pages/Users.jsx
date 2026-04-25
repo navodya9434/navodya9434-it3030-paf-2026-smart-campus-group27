@@ -11,8 +11,17 @@ import {
 } from "react-icons/fi";
 
 const Users = () => {
+    
+   const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState("all");
+  const [promotionSelections, setPromotionSelections] = useState({});
+  const [updatingUserId, setUpdatingUserId] = useState("");
+  const [actionUserId, setActionUserId] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
+
 
   const MANAGER_ROLE_OPTIONS = [
   { value: "ROLE_TICKET_MANAGER", label: "Ticket Manager" },
@@ -143,6 +152,8 @@ const getResponseErrorMessage = async (response, fallbackMessage) => {
 
   return fallbackMessage;
 };
+
+
 
   const formatRole = (role) =>
     role.replace("ROLE_", "").toLowerCase();
