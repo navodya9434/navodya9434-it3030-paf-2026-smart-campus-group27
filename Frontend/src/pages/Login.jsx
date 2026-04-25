@@ -50,7 +50,82 @@ const Login = () => {
 
     return value === true || value === "true";
   };
+  
+    const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setLoading(true);
 
+    try {
+      if (isLogin) {
+        const { data } = await loginUser({
+          email: form.email.trim(),
+          password: form.password,
+        });
+
+        let isEmailVerified = resolveEmailVerified(data);
+
+        const loggedInUser = {
+          email: data?.email || form.email.trim(),
+          token: data?.token,
+          name: data?.name,
+          role: data?.role,
+          provider: data?.provider || "LOCAL",
+          emailVerified: isEmailVerified,
+        };
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify(loggedInUser)
+        );
+
+        try {
+          const profileRes = await API.get("/profile");
+          isEmailVerified = resolveEmailVerified(profileRes.data);
+          const syncedUser = {
+            ...loggedInUser,
+            ...profileRes.data,
+            emailVerified: isEmailVerified,
+          };
+          localStorage.setItem("user", JSON.stringify(syncedUser));
+        } catch {
+          // Keep login flow working even if profile sync endpoint is unavailable.
+        }
+
+        if (!isEmailVerified) {
+          toast("Please verify your email using OTP.");
+          navigate("/verify-email", { replace: true });
+          return;
+        }
+
+        toast.success("Login successful!");
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      await registerUser({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        password: form.password,
+      });
+
+      const successMessage = "Registration successful. Please sign in.";
+      setSuccess(successMessage);
+      toast.success(successMessage);
+      setIsLogin(true);
+      setForm({ name: "", email: form.email, password: "" });
+    } catch (err) {
+      const errorMessage = getErrorMessage(
+        err,
+        isLogin ? "Login failed. Please try again." : "Registration failed. Please try again."
+      );
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 
