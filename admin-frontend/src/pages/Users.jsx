@@ -27,6 +27,25 @@ const DEFAULT_ROLE_FILTER_OPTIONS = [
   "ROLE_FACILITY_MANAGER",
 ];
 
+const getAuthHeaders = () => {
+  const rawToken =
+    localStorage.getItem("adminToken") ||
+    localStorage.getItem("token") ||
+    localStorage.getItem("jwtToken");
+  if (!rawToken) {
+    return {};
+  }
+
+  const normalizedToken = rawToken.replace(/^Bearer\s+/i, "").trim();
+  if (!normalizedToken) {
+    return {};
+  }
+
+  return {
+    Authorization: `Bearer ${normalizedToken}`,
+  };
+};
+
   const formatRole = (role) =>
     role.replace("ROLE_", "").toLowerCase();
 
