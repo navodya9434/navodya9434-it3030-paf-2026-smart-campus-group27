@@ -98,7 +98,21 @@ const formatCreatedAt = (createdAtValue) => {
     minute: "2-digit",
   });
 };
+const resolveUserIdentifier = (user) => {
+  if (!user) {
+    return "";
+  }
 
+  if (user.id !== undefined && user.id !== null && user.id !== "") {
+    return String(user.id);
+  }
+
+  if (user.userId !== undefined && user.userId !== null && user.userId !== "") {
+    return String(user.userId);
+  }
+
+  return "";
+};
 
   const formatRole = (role) =>
     role.replace("ROLE_", "").toLowerCase();
