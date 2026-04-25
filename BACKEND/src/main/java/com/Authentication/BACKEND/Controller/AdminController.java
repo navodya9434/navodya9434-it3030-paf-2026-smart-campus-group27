@@ -33,6 +33,16 @@ public class AdminController {
         }
     }
 
+     @GetMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<AdminUserResponse> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::mapToAdminUserResponse)
+                .toList();
+    }
+
+
  
   
    
