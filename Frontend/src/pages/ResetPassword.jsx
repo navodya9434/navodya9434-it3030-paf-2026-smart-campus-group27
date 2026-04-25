@@ -18,6 +18,27 @@ const OTPInput = ({ length = 6 }) => {
   );
 };
 
+//  OTP Circle Input Component
+const OTPInput = ({ length = 6, value, onChange }) => {
+  const handleInput = (e, idx) => {
+    const val = e.target.value;
+    if (!/^\d*$/.test(val)) return; // only digits
+    const newVal = value.split("");
+    newVal[idx] = val;
+    onChange(newVal.join(""));
+    // auto focus next
+    if (val && idx < length - 1) {
+      const nextInput = document.getElementById(`otp-${idx + 1}`);
+      nextInput?.focus();
+    }
+    // auto backspace focus
+    if (!val && idx > 0) {
+      const prevInput = document.getElementById(`otp-${idx - 1}`);
+      prevInput?.focus();
+    }
+  };
+
+
 const ResetPassword = () => {
   const [step, setStep] = useState(1); // only UI toggle
 
