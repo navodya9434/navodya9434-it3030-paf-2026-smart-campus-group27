@@ -15,6 +15,29 @@ const VerifyEmail = () => {
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
 
+    useEffect(() => {
+    const sendOtp = async () => {
+      if (!storedUser?.email) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      setSendingOtp(true);
+      try {
+        await API.post(`/send-otp?email=${encodeURIComponent(storedUser.email)}`);
+        toast.success("OTP sent to your email");
+      } catch (err) {
+        const message = err?.response?.data?.message || err?.response?.data || "Failed to send OTP";
+        toast.error(message);
+      } finally {
+        setSendingOtp(false);
+      }
+    };
+
+    sendOtp();
+  }, [navigate, storedUser?.email]);
+
+
 
   return (
     <div
