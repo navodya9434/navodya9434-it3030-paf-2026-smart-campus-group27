@@ -104,6 +104,52 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         return stringValue.isEmpty() ? null : stringValue;
     }
 
+     private UserEntity updateExistingOAuthUser(UserEntity existingUser, String fallbackName) {
+        boolean changed = false;
+
+        if (existingUser.getPassword() == null || existingUser.getPassword().isBlank()) {
+            existingUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+            changed = true;
+        }
+
+        if (existingUser.getRole() == null) {
+            existingUser.setRole(Role.ROLE_USER);
+            changed = true;
+        }
+
+        if (existingUser.getUserId() == null || existingUser.getUserId().isBlank()) {
+            existingUser.setUserId(UUID.randomUUID().toString());
+            changed = true;
+        }
+
+        if (existingUser.getName() == null || existingUser.getName().isBlank()) {
+            existingUser.setName(fallbackName);
+            changed = true;
+        }
+
+        if (existingUser.getIsActive() == null || !existingUser.getIsActive()) {
+            existingUser.setIsActive(true);
+            changed = true;
+        }
+
+        if (existingUser.getIsAccountVerified() == null || !existingUser.getIsAccountVerified()) {
+            existingUser.setIsAccountVerified(true);
+            changed = true;
+        }
+
+        String provider = existingUser.getAuthProvider();
+        if (provider == null || provider.isBlank() || "LOCAL".equalsIgnoreCase(provider)) {
+            existingUser.setAuthProvider("GOOGLE");
+            changed = true;
+        }
+
+        if (changed) {
+            return userRepository.save(existingUser);
+        }
+
+        return existingUser;
+    }
+
 
    
 
