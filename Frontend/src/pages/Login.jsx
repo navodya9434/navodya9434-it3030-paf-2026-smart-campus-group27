@@ -127,6 +127,10 @@ const Login = () => {
     }
   };
 
+   const handleForgotPassword = () => {
+         navigate("/reset-password");
+  };
+
 
 
   return (
