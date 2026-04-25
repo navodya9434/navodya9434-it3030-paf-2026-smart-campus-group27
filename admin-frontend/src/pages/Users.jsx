@@ -14,29 +14,12 @@ const Users = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState("all");
 
-  // Dummy data (UI preview only)
-  const users = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john@gmail.com",
-      role: "ROLE_USER",
-      isActive: true,
-      isAccountVerified: true,
-      authProvider: "LOCAL",
-      createdAt: "2026-04-01",
-    },
-    {
-      id: 2,
-      name: "Admin User",
-      email: "admin@gmail.com",
-      role: "ROLE_ADMIN",
-      isActive: true,
-      isAccountVerified: true,
-      authProvider: "GOOGLE",
-      createdAt: "2026-03-15",
-    },
-  ];
+  const MANAGER_ROLE_OPTIONS = [
+  { value: "ROLE_TICKET_MANAGER", label: "Ticket Manager" },
+  { value: "ROLE_BOOKING_MANAGER", label: "Booking Manager" },
+  { value: "ROLE_FACILITIES_MANAGER", label: "Facilities Manager" },
+  { value: "ROLE_USER", label: "User" },
+];
 
   const filteredUsers = users;
 
