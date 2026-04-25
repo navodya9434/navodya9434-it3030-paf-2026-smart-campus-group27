@@ -75,6 +75,59 @@ const Users = () => {
     return matchesSearch && matchesRole;
   });
 
+ const totalUsers = users.length;
+  const activeUsers = users.filter((user) => user.isActive !== false).length;
+  const inactiveUsers = users.filter((user) => user.isActive === false).length;
+  const verifiedUsers = users.filter((user) => Boolean(user.isAccountVerified)).length;
+
+  const handlePromoteRole = async (user) => {
+    const targetUserId = resolveUserIdentifier(user);
+    const selectedManagerRole = promotionSelections[targetUserId];
+
+    if (!targetUserId) {
+      setActionMessage("Unable to update role: invalid user id");
+      return;
+    }
+
+    if (!selectedManagerRole) {
+      setActionMessage("Please choose a role before promoting");
+      return;
+    }
+
+    setUpdatingUserId(String(targetUserId));
+    setActionMessage("");
+
+    try {
+      const headers = getAuthHeaders();
+
+      const response = await fetch(
+        `${API_BASE_URL}/admin/promote/${encodeURIComponent(targetUserId)}?role=${encodeURIComponent(
+          selectedManagerRole
+        )}`,
+        {
+          method: "PUT",
+          headers,
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          response.status === 401 || response.status === 403
+            ? "Unauthorized: admin access required"
+            : await getResponseErrorMessage(response, "Failed to update user role")
+        );
+      }
+
+      await fetchUsers();
+
+      setActionMessage(`Role updated for ${user.name || user.email || "user"}`);
+    } catch (err) {
+      setActionMessage(err.message || "Unable to update role");
+    } finally {
+      setUpdatingUserId("");
+    }
+  };
 
 
   const MANAGER_ROLE_OPTIONS = [
