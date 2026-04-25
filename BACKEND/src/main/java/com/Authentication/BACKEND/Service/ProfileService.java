@@ -9,6 +9,9 @@ public interface ProfileService {
 
    ProfileResponse getProfile(String email);
 
+    void sendResetOtp(String email);
+
+
 
 
   
