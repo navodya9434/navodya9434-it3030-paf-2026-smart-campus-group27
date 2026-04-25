@@ -48,6 +48,16 @@ public class RoleChangeService {
         userRepository.save(user);
     }
 
+    public void deactivateUser(String userId) {
+        UserEntity user = findUserByIdentifier(userId);
+
+        if (user.getRole() == Role.ROLE_ADMIN) {
+            throw new RuntimeException("Cannot modify admin");
+        }
+
+        user.setIsActive(false);
+        userRepository.save(user);
+    }
 
 
    
