@@ -94,7 +94,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         response.sendRedirect(redirectUrl);
     }
 
-     private String getStringAttribute(OAuth2User oauth2User, String key) {
+    private String getStringAttribute(OAuth2User oauth2User, String key) {
         Object value = oauth2User.getAttributes().get(key);
         if (value == null) {
             return null;
@@ -104,7 +104,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         return stringValue.isEmpty() ? null : stringValue;
     }
 
-     private UserEntity updateExistingOAuthUser(UserEntity existingUser, String fallbackName) {
+    private UserEntity updateExistingOAuthUser(UserEntity existingUser, String fallbackName) {
         boolean changed = false;
 
         if (existingUser.getPassword() == null || existingUser.getPassword().isBlank()) {
@@ -150,7 +150,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         return existingUser;
     }
 
-     private UserEntity createNewOAuthUser(String email, String name) {
+    private UserEntity createNewOAuthUser(String email, String name) {
         UserEntity newUser = UserEntity.builder()
                 .email(email)
                 .name(name)
@@ -168,12 +168,4 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
         return userRepository.save(newUser);
     }
-
-
-
-   
-
-   
-
-   
 }
