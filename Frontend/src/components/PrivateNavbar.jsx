@@ -26,6 +26,13 @@ const PrivateNavbar = () => {
     return value === true || value === "true";
   };
 
+  const [user, setUser] = useState(storedUser || null);
+  const [otp, setOtp] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(resolveEmailVerified(storedUser));
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
 
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 shadow-[0_8px_30px_rgba(15,23,42,0.08)] backdrop-blur-md">
