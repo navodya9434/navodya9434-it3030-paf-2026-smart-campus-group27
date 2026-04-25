@@ -67,13 +67,12 @@ public class AuthController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unable to resolve user email for OTP verification");
     }
 
-
-      @PostMapping("/login")
+    @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
         return handleLogin(request, false);
     }
 
-     @PostMapping("/admin/login")
+    @PostMapping("/admin/login")
     public ResponseEntity<?> adminLogin(@RequestBody AuthRequest request) {
         return handleLogin(request, true);
     }
@@ -126,18 +125,17 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
     }
-   
-     private void authenticate(String email, String password) {
+
+    private void authenticate(String email, String password) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
     }
 
-       @GetMapping("/is-authenticated")
+    @GetMapping("/is-authenticated")
     public ResponseEntity<Boolean>isAuthenticated(@CurrentSecurityContext(expression = "authentication?.name")String email) {
           return ResponseEntity.ok(email != null);
     }
 
-
-     @PostMapping("/send-reset-otp")
+    @PostMapping("/send-reset-otp")
     public void sendResetOtp(@RequestParam String email) {
           try {
               profileService.sendResetOtp(email);
@@ -145,8 +143,8 @@ public class AuthController {
                throw  new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
           }
     }
-   
-      @PostMapping("/reset-password")
+
+        @PostMapping("/reset-password")
         public void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
             try {
                 profileService.resetPassword(request.getEmail(), request.getOtp(),request.getNewPassword());
@@ -155,8 +153,7 @@ public class AuthController {
             }
         }
 
-  
-          @PostMapping("/send-otp")
+        @PostMapping("/send-otp")
            public void sendVerifyOtp(
                  @CurrentSecurityContext(expression = "authentication?.name") String authName,
                  @RequestParam(required = false) String email
@@ -168,7 +165,7 @@ public class AuthController {
             }
         }
 
-         @PostMapping("/verify-otp")
+        @PostMapping("/verify-otp")
            public void verifyEmail(@RequestBody Map<String, Object> request,@CurrentSecurityContext(expression = "authentication?.name")String authName) {
           Object otpValue = request.get("otp");
           if (otpValue == null || otpValue.toString().isBlank()) {
@@ -181,6 +178,5 @@ public class AuthController {
                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,e.getMessage());
              }
         }
-
 
 }
