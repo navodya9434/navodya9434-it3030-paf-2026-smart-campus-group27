@@ -19,11 +19,12 @@ public class ProfileServiceImpl implements ProfileService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    
+    private final EmailService emailService;
 
     public ProfileServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     @Override
@@ -40,6 +41,19 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
    
+  @Override
+    public ProfileResponse getProfile(String email) {
+      UserEntity existingUser =   userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found :" + email));
+
+      return convertToProfileResponse(existingUser);
+    }
+
+     
+
+
+
+
 
    
 
