@@ -61,6 +61,16 @@ public class AdminController {
                 .build();
     }
 
+    @PutMapping("/users/{userId}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> activateUser(@PathVariable String userId) {
+        try {
+            roleChangeService.activateUser(userId);
+            return ResponseEntity.ok("User activated successfully");
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
 
 
  
