@@ -145,6 +145,15 @@ public class AuthController {
                throw  new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
           }
     }
+   
+      @PostMapping("/reset-password")
+        public void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+            try {
+                profileService.resetPassword(request.getEmail(), request.getOtp(),request.getNewPassword());
+            } catch (Exception e) {
+                throw  new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+            }
+        }
 
   
 
