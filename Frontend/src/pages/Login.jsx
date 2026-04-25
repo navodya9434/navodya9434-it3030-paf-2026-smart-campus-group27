@@ -39,6 +39,17 @@ const Login = () => {
     return fallback;
   };
 
+   const resolveEmailVerified = (data) => {
+    const value =
+      data?.emailVerified ??
+      data?.isEmailVerified ??
+      data?.verified ??
+      data?.isVerified ??
+      data?.isAccountVerified ??
+      data?.accountVerified;
+
+    return value === true || value === "true";
+  };
 
 
 
