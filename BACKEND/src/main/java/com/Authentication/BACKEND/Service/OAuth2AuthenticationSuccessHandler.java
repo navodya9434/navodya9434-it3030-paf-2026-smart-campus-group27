@@ -94,6 +94,17 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         response.sendRedirect(redirectUrl);
     }
 
+     private String getStringAttribute(OAuth2User oauth2User, String key) {
+        Object value = oauth2User.getAttributes().get(key);
+        if (value == null) {
+            return null;
+        }
+
+        String stringValue = String.valueOf(value).trim();
+        return stringValue.isEmpty() ? null : stringValue;
+    }
+
+
    
 
    
