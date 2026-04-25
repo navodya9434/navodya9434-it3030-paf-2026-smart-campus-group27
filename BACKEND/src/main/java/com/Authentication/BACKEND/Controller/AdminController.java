@@ -72,6 +72,17 @@ public class AdminController {
         }
     }
 
+       @PutMapping("/users/{userId}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> deactivateUser(@PathVariable String userId) {
+        try {
+            roleChangeService.deactivateUser(userId);
+            return ResponseEntity.ok("User deactivated successfully");
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
 
  
   
