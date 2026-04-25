@@ -72,6 +72,33 @@ public class EmailService {
             e.printStackTrace();
         }
     }
+  
+      // Account Verification Email (HTML)
+    public void sendAccountVerificationEmail(String toEmail, String otp) {
+        MimeMessage message = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("Account Verification OTP - CampusOps Hub");
+
+            String body = "<p>Dear User,</p>"
+                    + "<p>Thank you for registering with CampusOps Hub.</p>"
+                    + "<p>To complete your account verification, please use the following OTP:</p>"
+                    + "<p>Your OTP: <b>" + otp + "</b></p>"
+                    + "<p>This OTP is valid for <b>24 hours</b>.</p>"
+                    + "<p>Do not share this OTP with anyone for security reasons.</p>"
+                    + "<p>Best regards,<br>CampusOps Hub Team</p>";
+
+            helper.setText(body, true); // HTML enabled
+            mailSender.send(message);
+
+            System.out.println("Account verification email sent to: " + toEmail);
+
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
 
 
 
