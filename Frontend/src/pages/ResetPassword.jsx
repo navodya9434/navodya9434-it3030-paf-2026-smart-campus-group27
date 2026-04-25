@@ -73,6 +73,30 @@ const ResetPassword = () => {
     }
   };
 
+     //  Reset Password
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (otp.length < 6) return toast.error("Enter full 6-digit OTP");
+    if (!password.trim()) return toast.error("Password is required");
+    setLoading(true);
+    try {
+      await API.post("/reset-password", {
+        email,
+        otp,
+        newPassword: password,
+      });
+      toast.success("Password reset successful!");
+      setStep(1);
+      setEmail("");
+      setOtp("");
+      setPassword("");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Reset failed"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <div
