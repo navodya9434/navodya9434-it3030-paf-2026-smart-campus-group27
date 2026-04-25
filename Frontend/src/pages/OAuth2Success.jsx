@@ -3,11 +3,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const OAuth2Success = () => {
-
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-   useEffect(() => {
+  useEffect(() => {
     const error = searchParams.get("error");
     const token = searchParams.get("token");
     const email = searchParams.get("email");
@@ -28,7 +27,7 @@ const OAuth2Success = () => {
       return;
     }
 
-     const oauthUser = {
+    const oauthUser = {
       token,
       email,
       role,
@@ -37,13 +36,13 @@ const OAuth2Success = () => {
       googleId,
       emailVerified: true,
     };
-     localStorage.setItem("user", JSON.stringify(oauthUser));
+
+    localStorage.setItem("user", JSON.stringify(oauthUser));
     toast.success("Google login successful!");
     navigate("/dashboard", { replace: true });
   }, [navigate, searchParams]);
 
-
-   return (
+  return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 text-center">
       <p className="text-sm font-medium text-slate-700">Signing you in with Google...</p>
     </div>
@@ -51,4 +50,3 @@ const OAuth2Success = () => {
 };
 
 export default OAuth2Success;
-
