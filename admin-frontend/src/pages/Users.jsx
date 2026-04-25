@@ -80,6 +80,25 @@ const formatAuthProviderLabel = (provider) => {
     .join(" ");
 };
 
+const formatCreatedAt = (createdAtValue) => {
+  if (!createdAtValue) {
+    return "-";
+  }
+
+  const parsedDate = new Date(createdAtValue);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "-";
+  }
+
+  return parsedDate.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 
   const formatRole = (role) =>
     role.replace("ROLE_", "").toLowerCase();
