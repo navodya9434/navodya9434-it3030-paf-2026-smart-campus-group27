@@ -33,7 +33,7 @@ public class AdminController {
         }
     }
 
-     @GetMapping("/users")
+    @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
     public List<AdminUserResponse> getAllUsers() {
         return userRepository.findAll()
@@ -42,7 +42,7 @@ public class AdminController {
                 .toList();
     }
 
-     private AdminUserResponse mapToAdminUserResponse(UserEntity user) {
+    private AdminUserResponse mapToAdminUserResponse(UserEntity user) {
         String provider = user.getAuthProvider();
         if (provider == null || provider.isBlank()) {
             provider = "LOCAL";
@@ -72,7 +72,7 @@ public class AdminController {
         }
     }
 
-       @PutMapping("/users/{userId}/deactivate")
+    @PutMapping("/users/{userId}/deactivate")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deactivateUser(@PathVariable String userId) {
         try {
@@ -83,7 +83,7 @@ public class AdminController {
         }
     }
 
-      @DeleteMapping("/users/{userId}")
+    @DeleteMapping("/users/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteUser(@PathVariable String userId) {
         try {
@@ -93,14 +93,6 @@ public class AdminController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
-
-
- 
-  
-   
-   
-
-   
 
 
 }
