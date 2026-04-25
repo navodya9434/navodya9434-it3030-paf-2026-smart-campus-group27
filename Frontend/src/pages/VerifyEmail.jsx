@@ -37,6 +37,19 @@ const VerifyEmail = () => {
     sendOtp();
   }, [navigate, storedUser?.email]);
 
+   const handleResend = async () => {
+    setSendingOtp(true);
+    try {
+      await API.post(`/send-otp?email=${encodeURIComponent(storedUser.email)}`);
+      toast.success("OTP resent successfully");
+    } catch (err) {
+      const message = err?.response?.data?.message || err?.response?.data || "Failed to resend OTP";
+      toast.error(message);
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
 
 
   return (
