@@ -83,6 +83,17 @@ public class AdminController {
         }
     }
 
+      @DeleteMapping("/users/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> deleteUser(@PathVariable String userId) {
+        try {
+            roleChangeService.deleteUser(userId);
+            return ResponseEntity.ok("User deleted successfully");
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
 
  
   
