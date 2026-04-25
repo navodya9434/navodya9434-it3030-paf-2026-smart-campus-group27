@@ -25,7 +25,7 @@ public class RoleChangeService {
                 });
     }
 
-     public void updateUserRole(String userId, Role role) {
+    public void updateUserRole(String userId, Role role) {
         UserEntity user = findUserByIdentifier(userId);
 
         //  prevent changing another admin
@@ -37,7 +37,7 @@ public class RoleChangeService {
         userRepository.save(user);
     }
 
-      public void activateUser(String userId) {
+    public void activateUser(String userId) {
         UserEntity user = findUserByIdentifier(userId);
 
         if (user.getRole() == Role.ROLE_ADMIN) {
@@ -68,11 +68,4 @@ public class RoleChangeService {
 
         userRepository.delete(user);
     }
-
-   
-
-   
-   
-
-  
 }
