@@ -150,6 +150,26 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         return existingUser;
     }
 
+     private UserEntity createNewOAuthUser(String email, String name) {
+        UserEntity newUser = UserEntity.builder()
+                .email(email)
+                .name(name)
+                .userId(UUID.randomUUID().toString())
+                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                .authProvider("GOOGLE")
+                .role(Role.ROLE_USER)
+                .isActive(true)
+                .isAccountVerified(true)
+                .resetOtp(null)
+                .resetOtpExpiredAt(0L)
+                .verifyOtp(null)
+                .verifyOtpExpiredAt(0L)
+                .build();
+
+        return userRepository.save(newUser);
+    }
+
+
 
    
 
