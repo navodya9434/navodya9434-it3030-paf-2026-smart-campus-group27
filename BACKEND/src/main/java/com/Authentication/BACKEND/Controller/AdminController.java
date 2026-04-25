@@ -42,6 +42,26 @@ public class AdminController {
                 .toList();
     }
 
+     private AdminUserResponse mapToAdminUserResponse(UserEntity user) {
+        String provider = user.getAuthProvider();
+        if (provider == null || provider.isBlank()) {
+            provider = "LOCAL";
+        }
+
+        return AdminUserResponse.builder()
+                .id(user.getId())
+                .userId(user.getUserId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .isAccountVerified(user.getIsAccountVerified())
+                .isActive(user.getIsActive())
+                .role(user.getRole())
+                .authProvider(provider.toUpperCase(Locale.ROOT))
+                .createdAt(user.getCreatedAt())
+                .build();
+    }
+
+
 
  
   
