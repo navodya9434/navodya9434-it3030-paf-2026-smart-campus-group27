@@ -29,6 +29,17 @@ const Login = () => {
     }
   };
 
+   const getErrorMessage = (err, fallback) => {
+    if (err?.response?.data?.message) {
+      return err.response.data.message;
+    }
+    if (typeof err?.response?.data === "string") {
+      return err.response.data;
+    }
+    return fallback;
+  };
+
+
 
 
 
