@@ -51,6 +51,17 @@ const Users = () => {
       setIsLoading(false);
     }
   };
+ useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const availableRoles = Array.from(
+    new Set(users.map((user) => user.role).filter(Boolean))
+  );
+  const roleFilterOptions = Array.from(
+    new Set([...DEFAULT_ROLE_FILTER_OPTIONS, ...availableRoles])
+  );
 
 
 
