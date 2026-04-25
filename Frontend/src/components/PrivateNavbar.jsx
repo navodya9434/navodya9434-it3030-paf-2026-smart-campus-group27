@@ -14,6 +14,19 @@ const PrivateNavbar = () => {
     { to: "/user-report", label: "Reports" },
   ];
 
+   const resolveEmailVerified = (data, fallback = false) => {
+    const value =
+      data?.emailVerified ??
+      data?.isEmailVerified ??
+      data?.verified ??
+      data?.isVerified ??
+      data?.isAccountVerified ??
+      data?.accountVerified;
+    if (value === undefined || value === null) return fallback;
+    return value === true || value === "true";
+  };
+
+
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 shadow-[0_8px_30px_rgba(15,23,42,0.08)] backdrop-blur-md">
       
