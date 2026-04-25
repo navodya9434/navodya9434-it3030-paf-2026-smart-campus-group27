@@ -1,0 +1,72 @@
+package com.Authentication.BACKEND.Controller;
+
+import com.Authentication.BACKEND.Entity.Role;
+import com.Authentication.BACKEND.Entity.UserEntity;
+import com.Authentication.BACKEND.Io.AuthRequest;
+import com.Authentication.BACKEND.Io.AuthResponse;
+import com.Authentication.BACKEND.Io.ResetPasswordRequest;
+import com.Authentication.BACKEND.Repository.UserRepository;
+import com.Authentication.BACKEND.Service.AppUserDetailsService;
+import com.Authentication.BACKEND.Service.ProfileService;
+import com.Authentication.BACKEND.Util.JwtUtil;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+import java.time.Duration;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.annotation.CurrentSecurityContext;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.HashMap;
+
+@RestController
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final AuthenticationManager authenticationManager;
+    private final AppUserDetailsService appUserDetailsService;
+    private final JwtUtil jwtUtil;
+    private final ProfileService profileService;
+    private final UserRepository userRepository;
+
+    private String resolveEmailForOtp(String authName, String requestedEmail) {
+        if (requestedEmail != null && !requestedEmail.isBlank()) {
+            return requestedEmail;
+        }
+
+        if (authName == null || authName.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing authenticated user");
+        }
+
+        if (authName.contains("@")) {
+            return authName;
+        }
+
+        Optional<UserEntity> byUserId = userRepository.findByUserId(authName);
+        if (byUserId.isPresent()) {
+            return byUserId.get().getEmail();
+        }
+
+        Optional<UserEntity> byEmail = userRepository.findByEmail(authName);
+        if (byEmail.isPresent()) {
+            return byEmail.get().getEmail();
+        }
+
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unable to resolve user email for OTP verification");
+    }
+
+  
+
+}
