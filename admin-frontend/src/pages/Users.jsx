@@ -22,6 +22,37 @@ const Users = () => {
   const [actionUserId, setActionUserId] = useState("");
   const [actionMessage, setActionMessage] = useState("");
 
+   const fetchUsers = async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const headers = getAuthHeaders();
+
+      const response = await fetch(`${API_BASE_URL}/admin/users`, {
+        method: "GET",
+        headers,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          response.status === 401 || response.status === 403
+            ? "Unauthorized: please log in with an admin account"
+            : await getResponseErrorMessage(response, "Failed to fetch users")
+        );
+      }
+
+      const data = await response.json();
+      setUsers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message || "Unable to load users");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
 
   const MANAGER_ROLE_OPTIONS = [
   { value: "ROLE_TICKET_MANAGER", label: "Ticket Manager" },
