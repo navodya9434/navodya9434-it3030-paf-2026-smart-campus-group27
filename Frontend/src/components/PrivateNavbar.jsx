@@ -64,6 +64,23 @@ const PrivateNavbar = () => {
   }, []);
 
 
+    const handleVerifyClick = async () => {
+    if (emailVerified) {
+      setShowOtpInput(false);
+      setOtp("");
+      toast("Email is already verified");
+      return;
+    }
+
+    try {
+      await API.post(`/send-otp?email=${encodeURIComponent(user.email)}`);
+      toast.success("OTP sent to your email!");
+      setShowOtpInput(true);
+    } catch (err) {
+      toast.error(err.response?.data || "Failed to send OTP");
+    }
+  };
+
 
 
   return (
