@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import API from "../api";
 import { logo_back } from "../assets/assets";
 
 const VerifyEmail = () => {
@@ -15,7 +18,7 @@ const VerifyEmail = () => {
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
 
-    useEffect(() => {
+  useEffect(() => {
     const sendOtp = async () => {
       if (!storedUser?.email) {
         navigate("/login", { replace: true });
@@ -37,7 +40,7 @@ const VerifyEmail = () => {
     sendOtp();
   }, [navigate, storedUser?.email]);
 
-   const handleResend = async () => {
+  const handleResend = async () => {
     setSendingOtp(true);
     try {
       await API.post(`/send-otp?email=${encodeURIComponent(storedUser.email)}`);
@@ -50,8 +53,7 @@ const VerifyEmail = () => {
     }
   };
 
-
-   const handleVerify = async (e) => {
+  const handleVerify = async (e) => {
     e.preventDefault();
 
     if (otp.length !== 6) {
@@ -80,8 +82,6 @@ const VerifyEmail = () => {
     }
   };
 
-
-
   return (
     <div
       className="relative flex min-h-screen items-center justify-center overflow-hidden px-4"
@@ -91,49 +91,42 @@ const VerifyEmail = () => {
         backgroundPosition: "center",
       }}
     >
-      {/* Overlay */}
       <div className="absolute inset-0 bg-slate-950/55" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.3),transparent_48%),radial-gradient(circle_at_bottom_left,rgba(14,116,144,0.35),transparent_52%)]" />
 
-      {/* Card */}
       <div className="relative w-full max-w-md rounded-3xl border border-white/25 bg-white/10 p-7 text-white shadow-[0_20px_90px_rgba(2,6,23,0.45)] backdrop-blur-xl">
-        
-        <h1 className="text-2xl font-bold">Verify Your Email</h1>
-
+        <h1 className="text-2xl font-bold tracking-tight">Verify Your Email</h1>
         <p className="mt-2 text-sm text-slate-100/90">
-          Enter the 6-digit OTP sent to{" "}
-          <span className="font-semibold text-white">
-            user@example.com
-          </span>
+          Enter the 6-digit OTP sent to <span className="font-semibold text-white">{storedUser?.email}</span>.
         </p>
 
-        {/* Form */}
-        <div className="mt-6 space-y-4">
+        <form onSubmit={handleVerify} className="mt-6 space-y-4">
           <input
             type="text"
+            inputMode="numeric"
             maxLength={6}
             value={otp}
-            onChange={(e) =>
-              setOtp(e.target.value.replace(/\D/g, ""))
-            }
-            className="w-full rounded-xl border border-white/35 bg-white/85 px-4 py-3 text-center text-lg tracking-[0.25em] text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-300"
+            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+            className="w-full rounded-xl border border-white/35 bg-white/85 px-4 py-3 text-center text-lg tracking-[0.25em] text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-300"
             placeholder="000000"
           />
 
           <button
-            type="button"
-            className="w-full rounded-xl bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg hover:brightness-110"
+            type="submit"
+            disabled={verifyingOtp}
+            className="w-full rounded-xl bg-linear-to-r from-cyan-500 via-sky-500 to-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-900/35 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Verify Email
+            {verifyingOtp ? "Verifying..." : "Verify Email"}
           </button>
-        </div>
+        </form>
 
-        {/* Resend */}
         <button
           type="button"
-          className="mt-4 w-full rounded-xl border border-white/35 bg-white/10 px-4 py-3 text-sm font-semibold text-white hover:bg-white/20"
+          onClick={handleResend}
+          disabled={sendingOtp}
+          className="mt-4 w-full rounded-xl border border-white/35 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          Resend OTP
+          {sendingOtp ? "Sending OTP..." : "Resend OTP"}
         </button>
       </div>
     </div>
