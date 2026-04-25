@@ -48,6 +48,31 @@ public class EmailService {
         }
     }
 
+        // Reset OTP Email (HTML)
+    public void sendResetOtpEmail(String toEmail, String otp) {
+        MimeMessage message = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("Password Reset OTP - CampusOps Hub");
+
+            String body = "<p>Dear User,</p>"
+                    + "<p>We received a request to reset your password for your CampusOps Hub account.</p>"
+                    + "<p>Your OTP (One-Time Password) is: <b>" + otp + "</b></p>"
+                    + "<p>This OTP is valid for <b>10 minutes</b>.</p>"
+                    + "<p>If you did not request this password reset, please ignore this email.</p>"
+                    + "<p>For security reasons, do not share this OTP with anyone.</p>"
+                    + "<p>Best regards,<br>CampusOps Hub Team</p>";
+
+            helper.setText(body, true); // HTML enabled
+            mailSender.send(message);
+
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
 
