@@ -114,6 +114,36 @@ const resolveUserIdentifier = (user) => {
   return "";
 };
 
+const getResponseErrorMessage = async (response, fallbackMessage) => {
+  const contentType = response.headers.get("content-type") || "";
+
+  try {
+    if (contentType.includes("application/json")) {
+      const payload = await response.json();
+      if (typeof payload === "string" && payload.trim()) {
+        return payload;
+      }
+
+      if (payload?.message) {
+        return payload.message;
+      }
+
+      if (payload?.error) {
+        return payload.error;
+      }
+    } else {
+      const text = await response.text();
+      if (text?.trim()) {
+        return text;
+      }
+    }
+  } catch {
+    // Ignore parse failures and use fallback message below.
+  }
+
+  return fallbackMessage;
+};
+
   const formatRole = (role) =>
     role.replace("ROLE_", "").toLowerCase();
 
