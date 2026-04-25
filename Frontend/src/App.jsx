@@ -11,6 +11,19 @@ const App = () => {
   const hideNavbarPaths = ["/login", "/oauth2/success", "/verify-email"];
   const hideFooterPaths = ["/login", "/oauth2/success", "/verify-email"];
 
+   const isEmailVerified = (userData) => {
+    const value =
+      userData?.emailVerified ??
+      userData?.isEmailVerified ??
+      userData?.verified ??
+      userData?.isVerified ??
+      userData?.isAccountVerified ??
+      userData?.accountVerified;
+
+    return value === true || value === "true";
+  };
+
+
   return (
     <div>
       
