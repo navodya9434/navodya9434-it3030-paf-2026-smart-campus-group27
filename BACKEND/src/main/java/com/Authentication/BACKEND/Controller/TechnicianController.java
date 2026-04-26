@@ -13,7 +13,7 @@ import java.util.List;
 public class TechnicianController {
 
     private final TechnicianRepository technicianRepository;
-
+//improved controller file
     // ✅ Get all technicians (for dropdown in frontend)
     @GetMapping("/all")
     public List<TechnicianEntity> getAllTechnicians() {
