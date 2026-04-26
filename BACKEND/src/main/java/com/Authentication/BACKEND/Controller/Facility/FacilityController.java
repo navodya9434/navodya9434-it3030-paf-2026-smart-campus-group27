@@ -97,3 +97,31 @@ public class FacilityController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
+
+    @GetMapping("/filter/location")
+    @PreAuthorize("hasAnyRole('USER', 'FACILITIES_MANAGER')")
+    public ResponseEntity<?> filterByLocation(@RequestParam String location) {
+        try {
+            List<FacilityResponse> results = facilityService.filterByLocation(location);
+            return ResponseEntity.ok(results);
+        } catch (Exception ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    @GetMapping("/filter/status")
+    @PreAuthorize("hasAnyRole('USER', 'FACILITIES_MANAGER')")
+    public ResponseEntity<?> filterByStatus(@RequestParam FacilityStatus status) {
+        try {
+            List<FacilityResponse> results = facilityService.filterByStatus(status);
+            return ResponseEntity.ok(results);
+        } catch (Exception ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
