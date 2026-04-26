@@ -21,6 +21,7 @@ export default function UserTickets() {
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
+    const [facilities, setFacilities] = useState([]); // ✅ MOVE HERE
 
   const [form, setForm] = useState({
     title: "",
@@ -40,6 +41,13 @@ export default function UserTickets() {
     loadTickets();
   }, []);
 
+  useEffect(() => {
+  loadTickets();
+
+  API.get("/facilities")
+    .then((res) => setFacilities(res.data))
+    .catch((err) => console.error(err));
+}, []);
   const loadTickets = async () => {
     try {
       setLoading(true);
@@ -274,13 +282,19 @@ export default function UserTickets() {
               </div>
 
               <div>
-                <input
-                  name="location"
-                  placeholder="Location"
-                  value={form.location}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-white/70 bg-[color:var(--sand)]/80 px-4 py-3 text-sm text-[color:var(--ink)] outline-none focus:border-[color:var(--teal)]"
-                />
+                <select
+  name="location"
+  value={form.location}
+  onChange={handleChange}
+  className="w-full rounded-2xl border border-white/70 bg-[color:var(--sand)]/80 px-4 py-3 text-sm text-[color:var(--ink)] outline-none focus:border-[color:var(--teal)]"
+>
+  <option value="">Select Location</option>
+  {facilities.map((f) => (
+    <option key={f.id} value={f.name}>
+      {f.name}
+    </option>
+  ))}
+</select>
                 {errors.location && <p className="mt-1 text-xs text-red-600">{errors.location}</p>}
               </div>
 
@@ -483,6 +497,19 @@ export default function UserTickets() {
                         {t.status}
                       </span>
                     </div>
+                    {/* IMAGES */}
+{t.imageUrls?.length > 0 && (
+  <div className="mt-3 flex flex-wrap gap-2">
+    {t.imageUrls.map((img, i) => (
+      <img
+        key={i}
+        src={img}
+        alt={`ticket-${t.id}-img-${i}`}
+        className="h-20 w-20 rounded-xl object-cover"
+      />
+    ))}
+  </div>
+)}
 
                     <div className="mt-3 space-y-2">
                       {commentsMap[t.id]?.map((c) => (
@@ -491,6 +518,7 @@ export default function UserTickets() {
                         </div>
                       ))}
                     </div>
+
 
                     {t.rejectionReason && (
                       <p className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
