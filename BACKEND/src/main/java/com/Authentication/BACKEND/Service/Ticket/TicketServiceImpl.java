@@ -13,9 +13,14 @@ import com.Authentication.BACKEND.Repository.Ticket.TicketRepository;
 import com.Authentication.BACKEND.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.Authentication.BACKEND.Service.EmailService;
+import com.Authentication.BACKEND.Entity.TechnicianEntity;
+import com.Authentication.BACKEND.Repository.TechnicianRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+
 
 @Service
 @RequiredArgsConstructor
@@ -24,8 +29,52 @@ public class TicketServiceImpl implements  TicketService {
     private final TicketRepository ticketRepository;
     private final TicketCommentRepository commentRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
+    private final TechnicianRepository technicianRepository;
 
+private void sendAssignmentEmail(TicketEntity ticket, TechnicianEntity tech) {
 
+    String subject = "🚨 New Ticket Assigned - " + ticket.getTitle();
+
+    StringBuilder body = new StringBuilder();
+
+    body.append("<h2>🚨 You Have Been Assigned a New Ticket</h2>");
+
+    body.append("<p><b>Technician:</b> ")
+            .append(tech.getUsername())
+            .append("</p>");
+
+    body.append("<hr>");
+
+    body.append("<h3>📌 Ticket Details</h3>");
+    body.append("<p><b>ID:</b> ").append(ticket.getId()).append("</p>");
+    body.append("<p><b>Title:</b> ").append(ticket.getTitle()).append("</p>");
+    body.append("<p><b>Description:</b> ").append(ticket.getDescription()).append("</p>");
+    body.append("<p><b>Category:</b> ").append(ticket.getCategory()).append("</p>");
+    body.append("<p><b>Location:</b> ").append(ticket.getLocation()).append("</p>");
+    body.append("<p><b>Priority:</b> ").append(ticket.getPriority()).append("</p>");
+    body.append("<p><b>Status:</b> ").append(ticket.getStatus()).append("</p>");
+    body.append("<p><b>Contact Email:</b> ").append(ticket.getContactEmail()).append("</p>");
+    body.append("<p><b>Contact Phone:</b> ").append(ticket.getContactPhone()).append("</p>");
+    body.append("<p><b>Created At:</b> ").append(ticket.getCreatedAt()).append("</p>");
+
+    body.append("<hr>");
+
+    // ✅ IMAGES
+    if (ticket.getImageUrls() != null && !ticket.getImageUrls().isEmpty()) {
+        body.append("<h3>📷 Attached Images</h3>");
+        for (String img : ticket.getImageUrls()) {
+            body.append("<img src='")
+                    .append(img)
+                    .append("' width='250' style='margin:10px;border-radius:8px;'/>");
+        }
+    }
+
+    body.append("<hr>");
+    body.append("<p>⚡ Please attend this ticket as soon as possible.</p>");
+
+    emailService.sendHtmlEmail(tech.getEmail(), subject, body.toString());
+}
     @Override
     public TicketResponse createTicket(String email, TicketRequest request) {
         UserEntity user = userRepository.findByEmail(email)
@@ -73,16 +122,24 @@ public class TicketServiceImpl implements  TicketService {
         return map(ticketRepository.save(ticket));
     }
 
-    @Override
-    public TicketResponse assignTechnician(Long ticketId, String technicianEmail) {
-        TicketEntity ticket = ticketRepository.findById(ticketId).orElseThrow();
-        UserEntity tech = userRepository.findByEmail(technicianEmail).orElseThrow();
+   @Override
+public TicketResponse assignTechnician(Long ticketId, String technicianEmail) {
 
-        ticket.setAssignedTo(tech);
-        ticket.setStatus("IN_PROGRESS");
+    TicketEntity ticket = ticketRepository.findById(ticketId)
+            .orElseThrow(() -> new RuntimeException("Ticket not found"));
 
-        return map(ticketRepository.save(ticket));
-    }
+    TechnicianEntity tech = technicianRepository.findByEmail(technicianEmail)
+            .orElseThrow(() -> new RuntimeException("Technician not found"));
+
+    ticket.setAssignedTo(tech); // 🔥 REQUIRED FIX
+    ticket.setStatus("IN_PROGRESS");
+
+    TicketEntity saved = ticketRepository.save(ticket);
+
+    sendAssignmentEmail(saved, tech);
+
+    return map(saved);
+}
 @Override
 public void addComment(Long ticketId, String email, CommentRequest request) {
 
@@ -180,4 +237,5 @@ public void deleteComment(Long commentId, String email) {
 
     commentRepository.delete(comment);
 }
+
 }
