@@ -13,7 +13,10 @@ export default function Tickets() {
   const [statusFilter, setStatusFilter] = useState("ALL");
 
   const [commentInputs, setCommentInputs] = useState({});
+  const [editInputs, setEditInputs] = useState({});
+  const [editingId, setEditingId] = useState(null);
 
+const currentUserEmail = JSON.parse(localStorage.getItem("user"))?.email;
   const [technicians] = useState([
     { id: 1, username: "sam_wick", email: "sam.tech@example.com" },
     { id: 2, username: "john_doe", email: "john.tech@example.com" },
@@ -27,7 +30,7 @@ export default function Tickets() {
   const loadTickets = async () => {
     try {
       setLoading(true);
-const { data } = await api.get("/tickets/all");
+      const { data } = await api.get("/tickets/all");
       const ticketList = Array.isArray(data) ? data : data?.data || [];
       setTickets(ticketList);
 
@@ -95,17 +98,17 @@ const { data } = await api.get("/tickets/all");
   };
 
   const sendAlert = async (ticket) => {
-  try {
-    await api.post(`/tickets/alert/${ticket.id}`);
+    try {
+      await api.post(`/tickets/alert/${ticket.id}`);
 
-    alert(
-      `🚨 ALERT SENT\nTicket ID: ${ticket.id}\nLocation: ${ticket.location}`
-    );
-  } catch (err) {
-    console.error(err);
-    alert("Failed to send alert");
-  }
-};
+      alert(
+        `🚨 ALERT SENT\nTicket ID: ${ticket.id}\nLocation: ${ticket.location}`
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to send alert");
+    }
+  };
 
   const addComment = async (ticketId) => {
     const message = commentInputs[ticketId];
@@ -119,6 +122,28 @@ const { data } = await api.get("/tickets/all");
         [ticketId]: "",
       }));
 
+      loadComments(ticketId);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const updateComment = async (commentId, ticketId) => {
+    const message = editInputs[commentId];
+    if (!message) return;
+
+    try {
+      await api.put(`/tickets/comment/${commentId}`, { message });
+      setEditingId(null);
+      loadComments(ticketId);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const deleteComment = async (commentId, ticketId) => {
+    try {
+      await api.delete(`/tickets/comment/${commentId}`);
       loadComments(ticketId);
     } catch (err) {
       console.error(err);
@@ -161,7 +186,6 @@ const { data } = await api.get("/tickets/all");
     });
   }, [tickets, searchTerm, priorityFilter, statusFilter]);
 
-  // 🔥 SPLIT ACTIVE & PAST
   const activeTickets = filteredTickets.filter(
     (t) => t.status !== "RESOLVED" && t.status !== "REJECTED"
   );
@@ -199,20 +223,75 @@ const { data } = await api.get("/tickets/all");
         </div>
       )}
 
-      {/* COMMENTS (only active) */}
+      {/* COMMENTS */}
       <div className="mt-3">
         <h4 className="text-sm font-bold mb-1">Comments</h4>
 
-        {commentsMap[t.id]?.map((c) => (
-          <div
-            key={c.id}
-            className="mt-1 p-2 rounded bg-slate-800/50 border-l-4 border-purple-400"
-          >
-            <p className="text-sm">
-              <b>{c.userName}</b>: {c.message}
-            </p>
-          </div>
-        ))}
+        {commentsMap[t.id]?.map((c) => {
+          const isOwn = c.userName === currentUserEmail;
+
+          return (
+            <div
+              key={c.id}
+              className={`mt-2 flex ${isOwn ? "justify-end" : "justify-start"}`}
+            >
+              <div className={`max-w-xs p-2 rounded border-l-4 ${
+                isOwn
+                  ? "bg-cyan-800/40 border-cyan-400 text-right"
+                  : "bg-slate-800/50 border-purple-400"
+              }`}>
+                {editingId === c.id ? (
+                  <>
+                    <input
+                      value={editInputs[c.id] || ""}
+                      onChange={(e) =>
+                        setEditInputs({
+                          ...editInputs,
+                          [c.id]: e.target.value,
+                        })
+                      }
+                      className="w-full p-1 text-sm bg-slate-900 border border-slate-600"
+                    />
+                    <button
+                      onClick={() => updateComment(c.id, t.id)}
+                      className="text-xs text-green-400 mt-1"
+                    >
+                      Save
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-sm">
+                    <b>{c.userName}</b>: {c.message}
+                  </p>
+                )}
+
+                {isOwn && editingId !== c.id && (
+                  <div className="flex gap-2 mt-1 text-xs">
+                    <button
+                      onClick={() => {
+                        setEditingId(c.id);
+                        setEditInputs({
+                          ...editInputs,
+                          [c.id]: c.message,
+                        });
+                      }}
+                      className="text-yellow-400"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => deleteComment(c.id, t.id)}
+                      className="text-red-400"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
 
         {!isPast && (
           <>
@@ -238,7 +317,6 @@ const { data } = await api.get("/tickets/all");
         )}
       </div>
 
-      {/* ACTIVE CONTROLS ONLY */}
       {!isPast && (
         <>
           <div className="mt-3">
