@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-
+// 🔥 This service is responsible for creating and managing alerts related to tickets.
 @Service
 @RequiredArgsConstructor
 public class TicketAlertServiceImpl implements TicketAlertService {
