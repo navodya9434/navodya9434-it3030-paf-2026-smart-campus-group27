@@ -69,3 +69,31 @@ public class FacilityController {
         }
     }
 
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('USER', 'FACILITIES_MANAGER')")
+    public ResponseEntity<?> searchFacilities(@RequestParam String searchTerm) {
+        try {
+            List<FacilityResponse> results = facilityService.searchFacilities(searchTerm);
+            return ResponseEntity.ok(results);
+        } catch (Exception ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    @GetMapping("/filter/type")
+    @PreAuthorize("hasAnyRole('USER', 'FACILITIES_MANAGER')")
+    public ResponseEntity<?> filterByType(@RequestParam FacilityType type) {
+        try {
+            List<FacilityResponse> results = facilityService.filterByType(type);
+            return ResponseEntity.ok(results);
+        } catch (Exception ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
