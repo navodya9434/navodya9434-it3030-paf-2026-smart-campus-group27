@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-
+//improved entity for ticket comments with better structure and annotations
 @Entity
 @Table(name = "ticket_comments")
 @Data
