@@ -3,6 +3,7 @@ package com.Authentication.BACKEND.Service.Ticket;
 import com.Authentication.BACKEND.Io.Ticket.TicketAlertResponse;
 
 import java.util.List;
+//service interface for managing ticket alerts, including sending alerts, retrieving alerts based on user roles, and resolving alerts
 
 public interface TicketAlertService {
 
