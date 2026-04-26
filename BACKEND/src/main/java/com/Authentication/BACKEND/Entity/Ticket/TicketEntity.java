@@ -1,5 +1,6 @@
 package com.Authentication.BACKEND.Entity.Ticket;
 
+import com.Authentication.BACKEND.Entity.TechnicianEntity;
 import com.Authentication.BACKEND.Entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import com.Authentication.BACKEND.Entity.TechnicianEntity;
 
 
 @Entity
@@ -47,9 +49,9 @@ public class TicketEntity {
     @JoinColumn(name = "created_by")
     private UserEntity createdBy;
 
-    @ManyToOne
-    @JoinColumn(name = "assigned_to")
-    private UserEntity assignedTo;
+  @ManyToOne
+@JoinColumn(name = "assigned_to")
+private TechnicianEntity assignedTo;
 
     @ElementCollection
     private List<String> imageUrls = new ArrayList<>();
