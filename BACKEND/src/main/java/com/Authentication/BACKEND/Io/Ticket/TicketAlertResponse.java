@@ -3,7 +3,7 @@ package com.Authentication.BACKEND.Io.Ticket;
 import lombok.*;
 
 import java.time.LocalDateTime;
-
+//dto for ticket alert response
 @Data
 @Builder
 public class TicketAlertResponse {
