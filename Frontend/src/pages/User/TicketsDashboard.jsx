@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import API from "../../api";
-
+//jsx file for the user dashboard, showing a summary of their tickets and bookings, as well as recent activity. This is the main landing page after login for users. It should be visually appealing and easy to navigate.
 export default function TicketsDashboard() {
   const [tickets, setTickets] = useState([]);
   const [recentTickets, setRecentTickets] = useState([]);
