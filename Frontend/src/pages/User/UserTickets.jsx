@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../../api";
-
+//jsx file for user to view and manage their tickets, also create new tickets
 const TICKET_NOTIFICATION_KEY = "ticket_notifications";
 
 const currentUserEmail = JSON.parse(localStorage.getItem("user"))?.email;
