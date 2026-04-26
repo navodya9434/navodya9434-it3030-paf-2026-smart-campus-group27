@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+//improved final controller for ticket alerts, added endpoint to resolve alerts by ticket ID, and improved naming conventions for clarity
 @RestController
 @RequestMapping("/tickets/alert")
 @RequiredArgsConstructor
