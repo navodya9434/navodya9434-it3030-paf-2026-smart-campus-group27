@@ -48,6 +48,21 @@ public class EmailService {
         }
     }
 
+    public void sendHtmlEmail(String toEmail, String subject, String htmlContent) {
+    MimeMessage message = mailSender.createMimeMessage();
+    try {
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setFrom(fromEmail);
+        helper.setTo(toEmail);
+        helper.setSubject(subject);
+        helper.setText(htmlContent, true); // HTML enabled
+
+        mailSender.send(message);
+
+    } catch (MessagingException e) {
+        e.printStackTrace();
+    }
+}
     // Reset OTP Email (HTML)
     public void sendResetOtpEmail(String toEmail, String otp) {
         MimeMessage message = mailSender.createMimeMessage();
