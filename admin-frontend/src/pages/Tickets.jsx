@@ -7,22 +7,83 @@ export default function Tickets() {
   const [tickets, setTickets] = useState([]);
   const [commentsMap, setCommentsMap] = useState({});
   const [loading, setLoading] = useState(true);
+  const [actionLocked, setActionLocked] = useState({});
 
   const [searchTerm, setSearchTerm] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
+  const [groupByLocation, setGroupByLocation] = useState(false);
+
+  const [locationFilter, setLocationFilter] = useState(""); // RESTORED (from V2)
+
   const [commentInputs, setCommentInputs] = useState({});
   const [editInputs, setEditInputs] = useState({});
   const [editingId, setEditingId] = useState(null);
 
-const currentUserEmail = JSON.parse(localStorage.getItem("user"))?.email;
-  const [technicians] = useState([
-    { id: 1, username: "sam_wick", email: "sam.tech@example.com" },
-    { id: 2, username: "john_doe", email: "john.tech@example.com" },
-    { id: 3, username: "ruwan_perera", email: "ruwan.tech@example.com" },
-  ]);
+  const [reportType, setReportType] = useState("ALL");
 
+  const currentUserEmail = JSON.parse(localStorage.getItem("user"))?.email;
+
+  useEffect(() => {
+  loadTickets();
+  loadTechnicians();
+}, []);
+
+const [technicians, setTechnicians] = useState([]);
+
+const loadTechnicians = async () => {
+  try {
+    const { data } = await api.get("/technicians/all");
+    setTechnicians(data);
+  } catch (err) {
+    console.error(err);
+  }
+};
+const filteredTickets = useMemo(() => {
+    return tickets.filter((t) => {
+      const matchSearch =
+        t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.location?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchLocation =
+        locationFilter === "" ||
+        t.location?.toLowerCase().includes(locationFilter.toLowerCase());
+
+      const matchPriority =
+        priorityFilter === "ALL" || t.priority === priorityFilter;
+
+      const matchStatus =
+        statusFilter === "ALL" || t.status === statusFilter;
+
+      return matchSearch && matchLocation && matchPriority && matchStatus;
+    });
+  }, [tickets, searchTerm, locationFilter, priorityFilter, statusFilter]);
+
+  const processedTickets = useMemo(() => {
+    if (!groupByLocation) return filteredTickets;
+
+    return [...filteredTickets].sort((a, b) =>
+      (a.location || "").localeCompare(b.location || "")
+    );
+  }, [filteredTickets, groupByLocation]);
+
+  const activeTickets = processedTickets.filter(
+    (t) => t.status !== "RESOLVED" && t.status !== "REJECTED"
+  );
+
+const groupedTickets = useMemo(() => {
+  if (!groupByLocation) return null;
+
+  return filteredTickets.reduce((acc, ticket) => {
+    const loc = ticket.location || "Unknown";
+
+    if (!acc[loc]) acc[loc] = [];
+    acc[loc].push(ticket);
+
+    return acc;
+  }, {});
+}, [filteredTickets, groupByLocation]);
   useEffect(() => {
     loadTickets();
   }, []);
@@ -73,12 +134,37 @@ const currentUserEmail = JSON.parse(localStorage.getItem("user"))?.email;
     }
   };
 
-  const acceptTicket = (id) => updateTicketStatus(id, "IN_PROGRESS");
+  const acceptTicket = async (id) => {
+    if (actionLocked[id]?.approved) return;
+
+    await updateTicketStatus(id, "IN_PROGRESS");
+
+    setActionLocked((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        approved: true,
+        rejected: false,
+      },
+    }));
+  };
 
   const rejectTicket = async (id) => {
+    if (actionLocked[id]?.rejected) return;
+
     const reason = prompt("Enter rejection reason:");
     if (!reason) return;
-    updateTicketStatus(id, "REJECTED", reason);
+
+    await updateTicketStatus(id, "REJECTED", reason);
+
+    setActionLocked((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        rejected: true,
+        approved: false,
+      },
+    }));
   };
 
   const assignTechnician = async (id, email) => {
@@ -98,16 +184,17 @@ const currentUserEmail = JSON.parse(localStorage.getItem("user"))?.email;
   };
 
   const sendAlert = async (ticket) => {
-    try {
-      await api.post(`/tickets/alert/${ticket.id}`);
+    if (actionLocked[ticket.id]?.alert) return;
 
-      alert(
-        `🚨 ALERT SENT\nTicket ID: ${ticket.id}\nLocation: ${ticket.location}`
-      );
-    } catch (err) {
-      console.error(err);
-      alert("Failed to send alert");
-    }
+    await api.post(`/tickets/alert/${ticket.id}`);
+
+    setActionLocked((prev) => ({
+      ...prev,
+      [ticket.id]: {
+        ...prev[ticket.id],
+        alert: true,
+      },
+    }));
   };
 
   const addComment = async (ticketId) => {
@@ -155,10 +242,22 @@ const currentUserEmail = JSON.parse(localStorage.getItem("user"))?.email;
 
     doc.text("Ticket Report", 14, 15);
 
+    let data = tickets;
+
+    if (reportType === "ACTIVE") {
+      data = tickets.filter(
+        (t) => t.status !== "RESOLVED" && t.status !== "REJECTED"
+      );
+    } else if (reportType === "PAST") {
+      data = tickets.filter(
+        (t) => t.status === "RESOLVED" || t.status === "REJECTED"
+      );
+    }
+
     autoTable(doc, {
       startY: 25,
       head: [["ID", "Title", "Location", "Priority", "Status"]],
-      body: tickets.map((t) => [
+      body: data.map((t) => [
         t.id,
         t.title,
         t.location,
@@ -170,27 +269,8 @@ const currentUserEmail = JSON.parse(localStorage.getItem("user"))?.email;
     doc.save("tickets.pdf");
   };
 
-  const filteredTickets = useMemo(() => {
-    return tickets.filter((t) => {
-      const matchSearch =
-        t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.location?.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchPriority =
-        priorityFilter === "ALL" || t.priority === priorityFilter;
-
-      const matchStatus =
-        statusFilter === "ALL" || t.status === statusFilter;
-
-      return matchSearch && matchPriority && matchStatus;
-    });
-  }, [tickets, searchTerm, priorityFilter, statusFilter]);
-
-  const activeTickets = filteredTickets.filter(
-    (t) => t.status !== "RESOLVED" && t.status !== "REJECTED"
-  );
-
-  const pastTickets = filteredTickets.filter(
+  
+  const pastTickets = processedTickets.filter(
     (t) => t.status === "RESOLVED" || t.status === "REJECTED"
   );
 
@@ -211,6 +291,7 @@ const currentUserEmail = JSON.parse(localStorage.getItem("user"))?.email;
         Status: {t.status}
       </p>
 
+      {/* IMAGES */}
       {t.imageUrls?.length > 0 && (
         <div className="flex gap-2 mt-2">
           {t.imageUrls.slice(0, 3).map((img, i) => (
@@ -223,8 +304,35 @@ const currentUserEmail = JSON.parse(localStorage.getItem("user"))?.email;
         </div>
       )}
 
+      {/* ➕ ADDED: TECHNICIAN ASSIGNMENT (ACTIVE ONLY) */}
+      {!isPast && (
+        <div className="mt-3">
+          <label className="text-xs text-slate-400">Assign Technician</label>
+
+          <select
+            value={t.assignedTo || ""}
+            onChange={(e) => assignTechnician(t.id, e.target.value)}
+            className="w-full mt-1 p-2 rounded bg-slate-900 border border-slate-600 text-white text-sm"
+          >
+            <option value="">Select technician</option>
+
+            {technicians.map((tech) => (
+              <option key={tech.id} value={tech.email}>
+                {tech.username} ({tech.email})
+              </option>
+            ))}
+          </select>
+
+          {t.assignedTo && (
+            <p className="text-xs text-cyan-300 mt-1">
+              👨‍🔧 Assigned: {t.assignedTo}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* COMMENTS */}
-      <div className="mt-3">
+      <div className="mt-3 max-h-32 overflow-y-auto">
         <h4 className="text-sm font-bold mb-1">Comments</h4>
 
         {commentsMap[t.id]?.map((c) => {
@@ -240,54 +348,10 @@ const currentUserEmail = JSON.parse(localStorage.getItem("user"))?.email;
                   ? "bg-cyan-800/40 border-cyan-400 text-right"
                   : "bg-slate-800/50 border-purple-400"
               }`}>
-                {editingId === c.id ? (
-                  <>
-                    <input
-                      value={editInputs[c.id] || ""}
-                      onChange={(e) =>
-                        setEditInputs({
-                          ...editInputs,
-                          [c.id]: e.target.value,
-                        })
-                      }
-                      className="w-full p-1 text-sm bg-slate-900 border border-slate-600"
-                    />
-                    <button
-                      onClick={() => updateComment(c.id, t.id)}
-                      className="text-xs text-green-400 mt-1"
-                    >
-                      Save
-                    </button>
-                  </>
-                ) : (
-                  <p className="text-sm">
-                    <b>{c.userName}</b>: {c.message}
-                  </p>
-                )}
 
-                {isOwn && editingId !== c.id && (
-                  <div className="flex gap-2 mt-1 text-xs">
-                    <button
-                      onClick={() => {
-                        setEditingId(c.id);
-                        setEditInputs({
-                          ...editInputs,
-                          [c.id]: c.message,
-                        });
-                      }}
-                      className="text-yellow-400"
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      onClick={() => deleteComment(c.id, t.id)}
-                      className="text-red-400"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                )}
+                <p className="text-sm">
+                  <b>{c.userName?.split("@")[0]}</b>: {c.message}
+                </p>
               </div>
             </div>
           );
@@ -317,70 +381,122 @@ const currentUserEmail = JSON.parse(localStorage.getItem("user"))?.email;
         )}
       </div>
 
+      {/* ACTION BUTTONS (UNCHANGED) */}
       {!isPast && (
-        <>
-          <div className="mt-3">
-            <select
-              className="w-full p-2 rounded-lg bg-slate-900/80 border border-slate-600 text-white"
-              onChange={(e) => assignTechnician(t.id, e.target.value)}
-            >
-              <option value="">Assign Technician</option>
-              {technicians.map((tech) => (
-                <option key={tech.id} value={tech.email}>
-                  {tech.username}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="flex gap-2 mt-3 flex-wrap">
 
-          <div className="mt-2">
-            <select
-              className="w-full p-2 rounded-lg bg-slate-900/80 border border-slate-600 text-white"
-              value={t.status}
-              onChange={(e) => updateTicketStatus(t.id, e.target.value)}
-            >
-              <option>OPEN</option>
-              <option>IN_PROGRESS</option>
-              <option>RESOLVED</option>
-              <option>REJECTED</option>
-            </select>
-          </div>
+          <button
+            onClick={() => acceptTicket(t.id)}
+            disabled={actionLocked[t.id]?.approved || t.status !== "OPEN"}
+            className={`px-3 py-1 text-xs rounded ${
+              actionLocked[t.id]?.approved || t.status !== "OPEN"
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-green-500 text-black"
+            }`}
+          >
+            {actionLocked[t.id]?.approved ? "Approved ✓" : "Approve"}
+          </button>
 
-          <div className="flex gap-2 mt-3">
-            <button
-              onClick={() => acceptTicket(t.id)}
-              className="flex-1 bg-emerald-500/80 hover:bg-emerald-500 p-2 rounded-lg text-white"
-            >
-              Accept
-            </button>
+          <button
+            onClick={() => rejectTicket(t.id)}
+            disabled={actionLocked[t.id]?.rejected || t.status === "REJECTED"}
+            className={`px-3 py-1 text-xs rounded ${
+              actionLocked[t.id]?.rejected || t.status === "REJECTED"
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-red-500 text-white"
+            }`}
+          >
+            {actionLocked[t.id]?.rejected ? "Rejected ✓" : "Reject"}
+          </button>
+          <button
+onClick={async () => {
+  await updateTicketStatus(t.id, "RESOLVED");
+  await api.put(`/tickets/alert/resolve-by-ticket/${t.id}`);
+}}  disabled={t.status === "RESOLVED" || t.status === "REJECTED"}
+  className={`px-3 py-1 text-xs rounded ${
+    t.status === "RESOLVED"
+      ? "bg-gray-500 cursor-not-allowed"
+      : "bg-blue-500 text-white"
+  }`}
+> 
+  {t.status === "RESOLVED" ? "Resolved ✓" : "Mark Resolved"}
+</button>
 
-            <button
-              onClick={() => rejectTicket(t.id)}
-              className="flex-1 bg-rose-500/80 hover:bg-rose-500 p-2 rounded-lg text-white"
-            >
-              Reject
-            </button>
+          <button
+            onClick={() => sendAlert(t)}
+            disabled={actionLocked[t.id]?.alert}
+            className={`px-3 py-1 text-xs rounded ${
+              actionLocked[t.id]?.alert
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-yellow-500 text-black"
+            }`}
+          >
+            {actionLocked[t.id]?.alert ? "Alert Sent ✓" : "Alert"}
+          </button>
 
-            <button
-              onClick={() => sendAlert(t)}
-              className="flex-1 bg-yellow-500/80 hover:bg-yellow-500 p-2 rounded-lg text-white"
-            >
-              Alert
-            </button>
-          </div>
-        </>
+        </div>
       )}
+
     </div>
   );
 
   return (
     <div className="min-h-screen text-white bg-linear-to-br from-slate-950 via-slate-900 to-slate-800">
-
       <div className="px-6 py-5 border-b border-slate-700 bg-slate-950/60 backdrop-blur-xl">
         <h1 className="text-2xl font-bold">Tickets Management</h1>
       </div>
 
-      <div className="px-6 pt-4">
+      <div className="p-6 grid md:grid-cols-4 gap-3">
+        <input
+          placeholder="Search tickets..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="p-2 rounded bg-slate-900 border border-slate-600"
+        />
+
+        <input
+          placeholder="Filter by location"
+          value={locationFilter}
+          onChange={(e) => setLocationFilter(e.target.value)}
+          className="p-2 rounded bg-slate-900 border border-slate-600"
+        />
+
+        <select
+          value={priorityFilter}
+          onChange={(e) => setPriorityFilter(e.target.value)}
+          className="p-2 rounded bg-slate-900 border border-slate-600"
+        >
+          <option value="ALL">All Priority</option>
+          <option>LOW</option>
+          <option>MEDIUM</option>
+          <option>HIGH</option>
+        </select>
+
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="p-2 rounded bg-slate-900 border border-slate-600"
+        >
+          <option value="ALL">All Status</option>
+          <option>OPEN</option>
+          <option>IN_PROGRESS</option>
+          <option>RESOLVED</option>
+          <option>REJECTED</option>
+        </select>
+      </div>
+
+      <div className="px-6 flex gap-3">
+        <button
+          onClick={() => setGroupByLocation((p) => !p)}
+          className={`px-4 py-2 rounded-lg border ${
+            groupByLocation
+              ? "bg-cyan-500 text-black"
+              : "bg-slate-900 border-slate-600"
+          }`}
+        >
+          Group by Location
+        </button>
+
         <button
           onClick={generatePDF}
           className="bg-blue-500 px-4 py-2 rounded-lg"
@@ -394,17 +510,55 @@ const currentUserEmail = JSON.parse(localStorage.getItem("user"))?.email;
           Active Tickets
         </h2>
 
-        {activeTickets.map((t) => (
-          <TicketCard key={t.id} t={t} isPast={false} />
-        ))}
+        {groupByLocation && groupedTickets ? (
+  Object.entries(groupedTickets).map(([location, tickets]) => (
+    <div key={location} className="col-span-full">
+      
+      <h2 className="text-lg font-bold text-cyan-300 mt-4 mb-2">
+        📍 {location}
+      </h2>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {tickets
+          .filter((t) => t.status !== "RESOLVED" && t.status !== "REJECTED")
+          .map((t) => (
+            <TicketCard key={t.id} t={t} isPast={false} />
+          ))}
+      </div>
+    </div>
+  ))
+) : (
+  activeTickets.map((t) => (
+    <TicketCard key={t.id} t={t} isPast={false} />
+  ))
+)}
 
         <h2 className="col-span-full text-xl font-bold text-slate-400 mt-6">
           Past Tickets
         </h2>
 
-        {pastTickets.map((t) => (
-          <TicketCard key={t.id} t={t} isPast={true} />
-        ))}
+        {groupByLocation && groupedTickets ? (
+  Object.entries(groupedTickets).map(([location, tickets]) => (
+    <div key={location} className="col-span-full">
+      
+      <h2 className="text-lg font-bold text-slate-400 mt-6 mb-2">
+        📍 {location}
+      </h2>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {tickets
+          .filter((t) => t.status === "RESOLVED" || t.status === "REJECTED")
+          .map((t) => (
+            <TicketCard key={t.id} t={t} isPast={true} />
+          ))}
+      </div>
+    </div>
+  ))
+) : (
+  pastTickets.map((t) => (
+    <TicketCard key={t.id} t={t} isPast={true} />
+  ))
+)}
       </div>
     </div>
   );
