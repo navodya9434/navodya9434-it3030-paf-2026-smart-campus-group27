@@ -25,8 +25,9 @@ public class TicketComment {
     @Column(length = 1500)
     private String message;
 
-    @ManyToOne
-    private UserEntity user;
+@ManyToOne
+@JoinColumn(name = "user_id")
+private UserEntity user;
 
     @ManyToOne
     private TicketEntity ticket;
