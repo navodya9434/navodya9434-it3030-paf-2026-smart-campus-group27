@@ -158,3 +158,54 @@ public class FacilityController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
+
+    @GetMapping("/suitable")
+    @PreAuthorize("hasAnyRole('USER', 'FACILITIES_MANAGER')")
+    public ResponseEntity<?> findSuitableFacilities(
+            @RequestParam FacilityType type,
+            @RequestParam Integer requiredCapacity) {
+        try {
+            List<FacilityResponse> results = facilityService.findSuitableFacilities(type, requiredCapacity);
+            return ResponseEntity.ok(results);
+        } catch (Exception ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('FACILITIES_MANAGER')")
+    public ResponseEntity<?> updateFacility(
+            @PathVariable Long id,
+            @Valid @RequestBody FacilityRequest request,
+            @CurrentSecurityContext(expression = "authentication?.name") String email) {
+        try {
+            FacilityResponse response = facilityService.updateFacility(id, request, email);
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+    @PatchMapping("/{id}/availability")
+    @PreAuthorize("hasRole('FACILITIES_MANAGER')")
+    public ResponseEntity<?> updateAvailability(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request,
+            @CurrentSecurityContext(expression = "authentication?.name") String email) {
+        try {
+            String availabilityWindows = request.get("availabilityWindows");
+            facilityService.updateAvailability(id, availabilityWindows, email);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Availability updated successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
