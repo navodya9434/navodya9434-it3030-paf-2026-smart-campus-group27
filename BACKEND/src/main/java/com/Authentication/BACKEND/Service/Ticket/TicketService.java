@@ -6,7 +6,7 @@ import com.Authentication.BACKEND.Io.Ticket.TicketRequest;
 import com.Authentication.BACKEND.Io.Ticket.TicketResponse;
 
 import java.util.List;
-
+//imprvoved service file with comment management and ticket retrieval for all users
 public interface TicketService {
 
     TicketResponse createTicket(String email, TicketRequest request);
