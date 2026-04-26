@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import api from "../api";
-
+//jsx file for the admin tickets page, showing all tickets in the system with options to filter, search, and manage them. Admins can approve/reject tickets, assign technicians, and view details. This is a key page for admins to oversee all reported issues and their statuses.
 export default function Tickets() {
   const [tickets, setTickets] = useState([]);
   const [commentsMap, setCommentsMap] = useState({});
