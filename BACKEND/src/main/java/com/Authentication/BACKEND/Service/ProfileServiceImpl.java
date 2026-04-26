@@ -40,7 +40,8 @@ public class ProfileServiceImpl implements ProfileService {
         return convertToProfileResponse(newProfile);
     }
 
-    @Override
+   
+  @Override
     public ProfileResponse getProfile(String email) {
       UserEntity existingUser =   userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found :" + email));
@@ -48,7 +49,7 @@ public class ProfileServiceImpl implements ProfileService {
       return convertToProfileResponse(existingUser);
     }
 
-    @Override
+     @Override
     public void sendResetOtp(String email) {
     UserEntity existingEntity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found : " + email));
@@ -74,7 +75,7 @@ public class ProfileServiceImpl implements ProfileService {
       }
     }
 
-    @Override
+       @Override
     public void resetPassword(String email, String otp, String newPassword) {
         UserEntity existingUser =  userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found : " + email));
@@ -92,7 +93,7 @@ public class ProfileServiceImpl implements ProfileService {
         userRepository.save(existingUser);
     }
 
-    @Override
+      @Override
     public void sendOtp(String email) {
         UserEntity existingUser =   userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found " + email));
@@ -120,7 +121,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     }
 
-    @Override
+     @Override
     public void verifyOtp(String email, String otp) {
 
         UserEntity existingUser = userRepository.findByEmail(email)
@@ -144,7 +145,7 @@ public class ProfileServiceImpl implements ProfileService {
         userRepository.save(existingUser);
     }
 
-    private ProfileResponse convertToProfileResponse(UserEntity newProfile) {
+     private ProfileResponse convertToProfileResponse(UserEntity newProfile) {
         return ProfileResponse.builder()
                 .name(newProfile.getName())
                 .email(newProfile.getEmail())
