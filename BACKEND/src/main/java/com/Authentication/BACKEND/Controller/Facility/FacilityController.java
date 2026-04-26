@@ -39,3 +39,33 @@ public class FacilityController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
+
+    
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'FACILITIES_MANAGER')")
+    public ResponseEntity<?> getFacilityById(@PathVariable Long id) {
+        try {
+            FacilityResponse response = facilityService.getFacilityById(id);
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        }
+    }
+
+        @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'FACILITIES_MANAGER')")
+    public ResponseEntity<?> getAllFacilities() {
+        try {
+            List<FacilityResponse> facilities = facilityService.getAllFacilities();
+            return ResponseEntity.ok(facilities);
+        } catch (Exception ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
