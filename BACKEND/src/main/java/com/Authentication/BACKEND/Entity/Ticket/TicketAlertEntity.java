@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-
+//improved entity to include more details about the alert, such as location and target role for better filtering and management
 @Entity
 @Table(name = "ticket_alerts")
 @Data
