@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-
+//dto for comment response, contains all the necessary information about a comment to be sent back to the client
 @Data
 @Builder
 public class CommentResponseDTO {
