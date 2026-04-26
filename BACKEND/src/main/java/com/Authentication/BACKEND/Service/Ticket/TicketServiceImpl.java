@@ -20,7 +20,7 @@ import com.Authentication.BACKEND.Repository.TechnicianRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
+//ticket service implementation file with added functionalities for comment management and retrieval of all tickets for admin users
 
 @Service
 @RequiredArgsConstructor
