@@ -209,3 +209,42 @@ public class FacilityController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('FACILITIES_MANAGER')")
+    public ResponseEntity<?> updateStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request,
+            @CurrentSecurityContext(expression = "authentication?.name") String email) {
+        try {
+            FacilityStatus status = FacilityStatus.valueOf(request.get("status"));
+            facilityService.updateStatus(id, status, email);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Status updated successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('FACILITIES_MANAGER')")
+    public ResponseEntity<?> deleteFacility(@PathVariable Long id) {
+        try {
+            facilityService.deleteFacility(id);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Facility deleted successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+
+
+}
