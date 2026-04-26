@@ -125,3 +125,36 @@ public class FacilityController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
+
+
+    @GetMapping("/filter/capacity")
+    @PreAuthorize("hasAnyRole('USER', 'FACILITIES_MANAGER')")
+    public ResponseEntity<?> filterByCapacity(@RequestParam Integer minCapacity) {
+        try {
+            List<FacilityResponse> results = facilityService.filterByCapacity(minCapacity);
+            return ResponseEntity.ok(results);
+        } catch (Exception ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    @GetMapping("/filter/multi")
+    @PreAuthorize("hasAnyRole('USER', 'FACILITIES_MANAGER')")
+    public ResponseEntity<?> filterByMultiple(
+            @RequestParam(required = false) FacilityType type,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) FacilityStatus status,
+            @RequestParam(required = false) Integer minCapacity) {
+        try {
+            List<FacilityResponse> results = facilityService.filterByMultiple(type, location, status, minCapacity);
+            return ResponseEntity.ok(results);
+        } catch (Exception ex) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", true);
+            error.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
