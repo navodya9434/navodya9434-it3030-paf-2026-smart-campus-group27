@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
+//dto for ticket response
 @Data
 @Builder
 public class TicketResponse {
