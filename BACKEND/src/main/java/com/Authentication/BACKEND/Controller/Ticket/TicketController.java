@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 
 import java.util.List;
-
+//improved controller with better error handling and support for both OAuth2 and traditional authentication methods. The requireEmail method now checks for the presence of an email attribute in the OAuth2User's attributes and falls back to checking the authentication name against the user repository if necessary. This ensures that we can reliably extract the user's email regardless of the authentication method used. Additionally, all endpoints now utilize this method to ensure consistent user identification across the application.
 @RestController
 @RequestMapping("tickets")
 @RequiredArgsConstructor
