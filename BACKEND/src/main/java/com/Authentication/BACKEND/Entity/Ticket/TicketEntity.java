@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.Authentication.BACKEND.Entity.TechnicianEntity;
 
-
+//improved entity file for tickets, which will be used to store ticket information in the database. It includes fields for id, title, category, description, location, priority, status, rejection reason, contact email and phone, createdBy user, assigned technician, image URLs, and timestamps for creation and updates. The class is annotated with JPA annotations to specify the table name and column properties, and Lombok annotations to generate boilerplate code like getters, setters, constructors, and builders. Additionally, it includes lifecycle callbacks to automatically set timestamps and default status when a ticket is created or updated.
 @Entity
 @Table(name = "tickets")
 @Data
