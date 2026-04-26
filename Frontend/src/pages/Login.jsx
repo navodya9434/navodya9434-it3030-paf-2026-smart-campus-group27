@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import API, { loginUser, registerUser } from "../api";
 import toast from "react-hot-toast";
 
-const Auth = () => {
+const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -295,4 +295,4 @@ const Auth = () => {
   );
 };
 
-export default Auth;
+export default Login;
