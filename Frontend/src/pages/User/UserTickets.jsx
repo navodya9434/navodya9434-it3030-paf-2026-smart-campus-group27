@@ -14,14 +14,13 @@ const readTicketNotifications = () => {
   }
 };
 
-
 export default function UserTickets() {
   const [tickets, setTickets] = useState([]);
-  const [commentsMap, setCommentsMap] = useState({}); // ✅ NEW
+  const [commentsMap, setCommentsMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
-    const [facilities, setFacilities] = useState([]); // ✅ MOVE HERE
+  const [facilities, setFacilities] = useState([]);
 
   const [form, setForm] = useState({
     title: "",
@@ -34,7 +33,6 @@ export default function UserTickets() {
   });
 
   const [errors, setErrors] = useState({});
-
   const [commentInputs, setCommentInputs] = useState({});
 
   useEffect(() => {
@@ -42,20 +40,18 @@ export default function UserTickets() {
   }, []);
 
   useEffect(() => {
-  loadTickets();
+    loadTickets();
+    API.get("/facilities")
+      .then((res) => setFacilities(res.data))
+      .catch((err) => console.error(err));
+  }, []);
 
-  API.get("/facilities")
-    .then((res) => setFacilities(res.data))
-    .catch((err) => console.error(err));
-}, []);
   const loadTickets = async () => {
     try {
       setLoading(true);
       const { data } = await API.get("/tickets/my");
       const ticketList = Array.isArray(data) ? data : data.data || [];
       setTickets(ticketList);
-
-      // ✅ LOAD COMMENTS FOR EACH TICKET
       ticketList.forEach((t) => loadComments(t.id));
     } catch (err) {
       console.error(err);
@@ -65,7 +61,6 @@ export default function UserTickets() {
     }
   };
 
-  // ✅ NEW: LOAD COMMENTS
   const loadComments = async (ticketId) => {
     try {
       const { data } = await API.get(`/tickets/${ticketId}/comments`);
@@ -81,24 +76,61 @@ export default function UserTickets() {
   const validate = () => {
     const newErrors = {};
 
-    if (!form.title) newErrors.title = "Title required";
-    if (!form.location) newErrors.location = "Location required";
-    if (!form.category) newErrors.category = "Category required";
-    if (!form.contact) newErrors.contact = "Email required";
-    if (!form.description) newErrors.description = "Description required";
+    if (!form.title.trim()) newErrors.title = "Title required";
+    if (!form.location.trim()) newErrors.location = "Location required";
+    if (!form.category.trim()) newErrors.category = "Category required";
+    if (!form.contact.trim()) newErrors.contact = "Email required";
 
+    if (!form.description.trim()) {
+      newErrors.description = "Description required";
+    } else if (form.description.trim().length <= 20) {
+      newErrors.description =
+        "Description must be more than 20 characters";
+    }
+
+    if (!form.images || form.images.length < 1) {
+      newErrors.images = "At least 1 image is required";
+    } else if (form.images.length > 3) {
+      newErrors.images = "Maximum 3 images allowed";
+    }
+
+    if (!form.contact.trim()) {
+  newErrors.contact = "Email or contact number is required";
+} else {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^[0-9]{10}$/;
+
+  const isValidEmail = emailRegex.test(form.contact.trim());
+  const isValidPhone = phoneRegex.test(form.contact.trim());
+
+  if (!isValidEmail && !isValidPhone) {
+    newErrors.contact =
+      "Enter a valid email or 10-digit contact number";
+  }
+}
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+
+    // clear field error while typing
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
   };
 
   const handleImages = (e) => {
-    const files = Array.from(e.target.files).slice(0, 3);
+    const files = Array.from(e.target.files);
 
-    const promises = files.map((file) => {
+    if (files.length > 3) {
+      setErrors((prev) => ({
+        ...prev,
+        images: "Maximum 3 images allowed",
+      }));
+      return;
+    }
+
+    const promises = files.slice(0, 3).map((file) => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
@@ -109,12 +141,18 @@ export default function UserTickets() {
 
     Promise.all(promises).then((images) => {
       setForm({ ...form, images });
+
+      setErrors((prev) => ({
+        ...prev,
+        images: "",
+      }));
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
+
     setSubmitError("");
     setSubmitLoading(true);
 
@@ -144,7 +182,10 @@ export default function UserTickets() {
       const currentNotifications = readTicketNotifications();
       localStorage.setItem(
         TICKET_NOTIFICATION_KEY,
-        JSON.stringify([notification, ...currentNotifications].slice(0, 20))
+        JSON.stringify([
+          notification,
+          ...currentNotifications,
+        ].slice(0, 20))
       );
 
       window.dispatchEvent(new Event("ticket-created"));
@@ -158,6 +199,8 @@ export default function UserTickets() {
         description: "",
         images: [],
       });
+
+      setErrors({});
     } catch (err) {
       const message =
         err?.response?.data?.message ||
@@ -185,10 +228,8 @@ export default function UserTickets() {
 
     try {
       await API.post(`/tickets/${ticketId}/comment`, { message });
-
       setCommentInputs({ ...commentInputs, [ticketId]: "" });
-
-      loadComments(ticketId); // ✅ reload only that ticket comments
+      loadComments(ticketId);
     } catch (err) {
       console.error(err);
     }
@@ -202,7 +243,6 @@ export default function UserTickets() {
       await API.put(`/tickets/comment/${commentId}`, {
         message: newMessage,
       });
-
       loadComments(ticketId);
     } catch (err) {
       console.error(err);
@@ -226,309 +266,219 @@ export default function UserTickets() {
     (t) => t.status === "RESOLVED" || t.status === "REJECTED"
   );
 
-  return (
-    <div
-      className="relative min-h-screen overflow-hidden"
-      style={{
-        fontFamily: '"Playfair Display", "Cormorant Garamond", serif',
-        "--ink": "#0f172a",
-        "--sand": "#f8f4ee",
-        "--stone": "#e7dcc8",
-        "--copper": "#c06b3e",
-        "--teal": "#0f766e",
-      }}
-    >
-      <style>{`
-        @keyframes ticketFade { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes glowFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-        @media (prefers-reduced-motion: reduce) { .ticket-animate { animation: none !important; } }
-      `}</style>
+  const TicketCard = ({ t }) => (
+    <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-5 shadow-lg backdrop-blur-xl w-full h-[460px] flex flex-col justify-between">
+      <div>
+        <h3 className="font-bold text-white">{t.title}</h3>
+        <p className="text-slate-300 text-sm mt-1">📍 {t.location}</p>
+        <p className="text-xs mt-1 text-cyan-300">{t.status}</p>
 
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(245,233,218,0.85),rgba(15,23,42,0.9))]"></div>
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950/80 via-slate-950/45 to-transparent"></div>
-      <div className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-[color:var(--teal)]/25 blur-[90px] ticket-animate" style={{ animation: "glowFloat 6s ease-in-out infinite" }}></div>
-      <div className="pointer-events-none absolute -right-20 bottom-16 h-80 w-80 rounded-full bg-[color:var(--copper)]/30 blur-[100px] ticket-animate" style={{ animation: "glowFloat 7s ease-in-out infinite" }}></div>
-
-      <div className="relative mx-auto w-[92%] max-w-6xl py-10">
-        <header className="ticket-animate rounded-[32px] border border-white/30 bg-white/80 p-6 shadow-[0_30px_90px_rgba(2,6,23,0.35)] backdrop-blur-2xl" style={{ animation: "ticketFade 550ms ease-out" }}>
-          <p className="text-xs uppercase tracking-[0.35em] text-[color:var(--copper)]">Tickets</p>
-          <h1 className="mt-3 text-3xl font-bold text-[color:var(--ink)]">Request Studio</h1>
-          <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            Submit, track, and collaborate on support tickets with a clear view of active and resolved updates.
-          </p>
-        </header>
-
-        <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[420px_1fr]">
-          <div className="ticket-animate sticky top-24 h-fit rounded-[30px] border border-white/60 bg-white/85 p-7 shadow-[0_30px_70px_rgba(15,23,42,0.16)]" style={{ animation: "ticketFade 600ms ease-out 80ms both" }}>
-            <h2 className="text-2xl font-bold text-[color:var(--ink)]">Create Ticket</h2>
-            <p className="mt-2 text-sm text-slate-600">Describe the issue and attach evidence if needed.</p>
-
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              {submitError && (
-                <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-                  {submitError}
-                </p>
-              )}
-
-              <div>
-                <input
-                  name="title"
-                  placeholder="Title"
-                  value={form.title}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-white/70 bg-[color:var(--sand)]/80 px-4 py-3 text-sm text-[color:var(--ink)] outline-none focus:border-[color:var(--teal)]"
-                />
-                {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title}</p>}
-              </div>
-
-              <div>
-                <select
-  name="location"
-  value={form.location}
-  onChange={handleChange}
-  className="w-full rounded-2xl border border-white/70 bg-[color:var(--sand)]/80 px-4 py-3 text-sm text-[color:var(--ink)] outline-none focus:border-[color:var(--teal)]"
->
-  <option value="">Select Location</option>
-  {facilities.map((f) => (
-    <option key={f.id} value={f.name}>
-      {f.name}
-    </option>
-  ))}
-</select>
-                {errors.location && <p className="mt-1 text-xs text-red-600">{errors.location}</p>}
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <select name="category" onChange={handleChange} className="w-full rounded-2xl border border-white/70 bg-[color:var(--sand)]/80 px-4 py-3 text-sm text-[color:var(--ink)] outline-none">
-                  <option value="">Select Category</option>
-                  <option>Equipment</option>
-                  <option>Furniture</option>
-                  <option>Network</option>
-                  <option>Other</option>
-                </select>
-
-                <select name="priority" onChange={handleChange} className="w-full rounded-2xl border border-white/70 bg-[color:var(--sand)]/80 px-4 py-3 text-sm text-[color:var(--ink)] outline-none">
-                  <option>LOW</option>
-                  <option>MEDIUM</option>
-                  <option>HIGH</option>
-                </select>
-              </div>
-
-              <input
-                name="contact"
-                placeholder="Email"
-                value={form.contact}
-                onChange={handleChange}
-                className="w-full rounded-2xl border border-white/70 bg-[color:var(--sand)]/80 px-4 py-3 text-sm text-[color:var(--ink)] outline-none"
-              />
-
-              <textarea
-                name="description"
-                placeholder="Description"
-                value={form.description}
-                onChange={handleChange}
-                className="h-32 w-full rounded-2xl border border-white/70 bg-[color:var(--sand)]/80 px-4 py-3 text-sm text-[color:var(--ink)] outline-none"
-              />
-
-              <div className="rounded-2xl border border-dashed border-[color:var(--stone)] bg-white/60 px-4 py-3 text-xs text-slate-600">
-                <input type="file" multiple accept="image/*" onChange={handleImages} className="text-sm" />
-              </div>
-
-              <button
-                type="submit"
-                disabled={submitLoading}
-                className="w-full rounded-full bg-[color:var(--teal)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-[0_14px_30px_rgba(15,118,110,0.35)] transition hover:-translate-y-0.5 hover:bg-emerald-700"
-              >
-                {submitLoading ? "Submitting..." : "Submit Ticket"}
-              </button>
-            </form>
-          </div>
-
-          <div className="flex flex-col gap-10">
-            <section className="ticket-animate" style={{ animation: "ticketFade 650ms ease-out 120ms both" }}>
-              <h2 className="text-2xl font-bold text-[color:var(--ink)]">Active Tickets</h2>
-              <p className="mt-1 text-sm text-slate-600">{activeTickets.length} active tickets in progress</p>
-
-              <div className="mt-5 space-y-4">
-  {loading ? (
-    <div className="rounded-2xl border border-white/70 bg-white/70 p-4 text-sm text-slate-500">
-      Loading...
-    </div>
-  ) : (
-    activeTickets.map((t) => (
-      <div
-        key={t.id}
-        className="rounded-[26px] border border-white/60 bg-white/85 p-5 shadow-[0_20px_40px_rgba(15,23,42,0.12)]"
-      >
-        {/* HEADER */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 className="text-lg font-semibold text-[color:var(--ink)]">
-              {t.title}
-            </h3>
-            <p className="text-sm text-slate-600">{t.location}</p>
-          </div>
-
-          <span className="rounded-full bg-[color:var(--teal)]/15 px-3 py-1 text-xs font-semibold text-[color:var(--teal)]">
-            {t.status}
-          </span>
-        </div>
-
-        {/* IMAGES */}
         {t.imageUrls?.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {t.imageUrls.map((img, i) => (
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            {t.imageUrls.slice(0, 3).map((img, i) => (
               <img
                 key={i}
                 src={img}
-                className="h-20 w-20 rounded-xl object-cover"
+                className="w-full h-20 object-cover rounded-lg border border-slate-600"
               />
             ))}
           </div>
         )}
 
-        {/* ===== COMMENTS (FIXED STRUCTURE) ===== */}
-        <div className="mt-4">
-          <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-            Comments
-          </h4>
+        <div className="mt-3 max-h-32 overflow-y-auto">
+          {commentsMap[t.id]?.map((c) => {
+            const isOwn =
+              c.userEmail === currentUserEmail ||
+              c.userName === currentUserEmail;
 
-          <div className="mt-3 space-y-2">
-            {commentsMap[t.id]?.map((c) => {
-              const isOwn =
-                c.userEmail === currentUserEmail ||
-                c.userName === currentUserEmail;
+            return (
+              <div
+                key={c.id}
+                className={`mt-1 p-2 rounded text-xs ${
+                  isOwn
+                    ? "bg-slate-800 border"
+                    : "ml-4 bg-slate-700 border-l-4 border-purple-400"
+                }`}
+              >
+                <b>{c.userName?.split("@")[0]}</b>: {c.message}
 
-              return (
-                <div
-                  key={c.id}
-                  className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-xs rounded-2xl px-3 py-2 text-sm ${
-                      isOwn
-                        ? "bg-[color:var(--teal)]/10 border border-[color:var(--teal)]/30 text-right"
-                        : "bg-[color:var(--sand)]/80 border border-white/70"
-                    }`}
-                  >
-                    <p className="text-slate-700">
-                      <span className="font-semibold text-[color:var(--ink)]">
-                        {c.userName}
-                      </span>
-                      : {c.message}
-                    </p>
-
-                    {isOwn && (
-                      <div className="mt-2 flex gap-3 text-xs justify-end">
-                        <button
-                          className="text-[color:var(--teal)]"
-                          onClick={() =>
-                            editComment(c.id, c.message, t.id)
-                          }
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          className="text-red-600"
-                          onClick={() =>
-                            removeComment(c.id, t.id)
-                          }
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
+                {isOwn && (
+                  <div className="mt-1">
+                    <button
+                      className="text-blue-400 mr-2"
+                      onClick={() =>
+                        editComment(c.id, c.message, t.id)
+                      }
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="text-red-400"
+                      onClick={() => removeComment(c.id, t.id)}
+                    >
+                      Delete
+                    </button>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* INPUT */}
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-            <input
-              placeholder="Add comment..."
-              value={commentInputs[t.id] || ""}
-              onChange={(e) =>
-                setCommentInputs({
-                  ...commentInputs,
-                  [t.id]: e.target.value,
-                })
-              }
-              className="w-full rounded-2xl border border-white/70 bg-white/80 px-3 py-2 text-sm text-[color:var(--ink)] outline-none"
-            />
-
-            <button
-              onClick={() => addComment(t.id)}
-              className="rounded-full bg-[color:var(--teal)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
-            >
-              Post
-            </button>
-          </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        {/* DELETE TICKET */}
+        <input
+          placeholder="Add comment..."
+          value={commentInputs[t.id] || ""}
+          onChange={(e) =>
+            setCommentInputs({
+              ...commentInputs,
+              [t.id]: e.target.value,
+            })
+          }
+          className="mt-2 w-full p-2 rounded bg-slate-800 border border-slate-600 text-white text-sm"
+        />
+
         <button
-          onClick={() => deleteTicket(t.id)}
-          className="mt-4 rounded-full bg-red-500/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+          onClick={() => addComment(t.id)}
+          className="mt-1 bg-cyan-500 px-3 py-1 rounded text-sm"
         >
-          Delete
+          Post
         </button>
       </div>
-    ))
-  )}
-</div>
-            </section>
 
-            <section className="ticket-animate" style={{ animation: "ticketFade 700ms ease-out 160ms both" }}>
-              <h2 className="text-2xl font-bold text-[color:var(--ink)]">Past Tickets</h2>
-              <p className="mt-1 text-sm text-slate-600">{pastTickets.length} resolved or rejected</p>
+    
+    </div>
+  );
 
-              <div className="mt-5 space-y-4">
-                {pastTickets.map((t) => (
-                  <div key={t.id} className="rounded-[26px] border border-white/60 bg-white/85 p-5 shadow-[0_20px_40px_rgba(15,23,42,0.12)]">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <h3 className="text-lg font-semibold text-[color:var(--ink)]">{t.title}</h3>
-                        <p className="text-sm text-slate-600">{t.location}</p>
-                      </div>
-                      <span className="rounded-full bg-[color:var(--stone)] px-3 py-1 text-xs font-semibold text-slate-700">
-                        {t.status}
-                      </span>
-                    </div>
-                    {/* IMAGES */}
-{t.imageUrls?.length > 0 && (
-  <div className="mt-3 flex flex-wrap gap-2">
-    {t.imageUrls.map((img, i) => (
-      <img
-        key={i}
-        src={img}
-        alt={`ticket-${t.id}-img-${i}`}
-        className="h-20 w-20 rounded-xl object-cover"
-      />
-    ))}
-  </div>
-)}
+  return (
+    <div className="min-h-screen text-white bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900">
 
-                    <div className="mt-3 space-y-2">
-                      {commentsMap[t.id]?.map((c) => (
-                        <div key={c.id} className="rounded-2xl border border-white/70 bg-[color:var(--sand)]/80 px-3 py-2 text-sm text-slate-700">
-                          <span className="font-semibold text-[color:var(--ink)]">{c.userName}</span>: {c.message}
-                        </div>
-                      ))}
-                    </div>
+      <div className="max-w-6xl mx-auto space-y-6 pt-6">
+        <div className="bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-xl text-center">
+          <h1 className="text-2xl font-bold text-cyan-300">
+            Tickets
+          </h1>
+          <p className="text-slate-400 text-sm mt-1">
+            Request & manage support tickets
+          </p>
+        </div>
+      </div>
 
+      <div className="w-[92%] mx-auto grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-10 py-10">
 
-                    {t.rejectionReason && (
-                      <p className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                        {t.rejectionReason}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
+        {/* FORM */}
+        <div className="bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-xl sticky top-24 h-fit">
+          <h2 className="text-xl font-bold mb-4">Create Ticket</h2>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+
+            <input
+              name="title"
+              placeholder="Title"
+              value={form.title}
+              onChange={handleChange}
+              className="p-3 bg-slate-800 border border-slate-700 rounded"
+            />
+            {errors.title && <p className="text-red-400 text-xs">{errors.title}</p>}
+
+            <select
+              name="location"
+              value={form.location}
+              onChange={handleChange}
+              className="p-3 bg-slate-800 border border-slate-700 rounded"
+            >
+              <option value="">Select Location</option>
+              {facilities.map((f) => (
+                <option key={f.id} value={f.name}>
+                  {f.name}
+                </option>
+              ))}
+            </select>
+            {errors.location && <p className="text-red-400 text-xs">{errors.location}</p>}
+
+            <select
+              name="category"
+              onChange={handleChange}
+              className="p-3 bg-slate-800 border border-slate-700 rounded"
+            >
+              <option value="">Category</option>
+              <option>Equipment</option>
+              <option>Furniture</option>
+              <option>Network</option>
+              <option>Other</option>
+            </select>
+            {errors.category && <p className="text-red-400 text-xs">{errors.category}</p>}
+
+            <select
+              name="priority"
+              onChange={handleChange}
+              className="p-3 bg-slate-800 border border-slate-700 rounded"
+            >
+              <option>LOW</option>
+              <option>MEDIUM</option>
+              <option>HIGH</option>
+            </select>
+
+            <input
+              name="contact"
+              placeholder="Email / Contact Number"
+              value={form.contact}
+              onChange={handleChange}
+              className="p-3 bg-slate-800 border border-slate-700 rounded"
+            />
+            {errors.contact && <p className="text-red-400 text-xs">{errors.contact}</p>}
+
+            <textarea
+              name="description"
+              placeholder="Description"
+              value={form.description}
+              onChange={handleChange}
+              className="p-3 bg-slate-800 border border-slate-700 rounded h-24"
+            />
+            {errors.description && (
+              <p className="text-red-400 text-xs">{errors.description}</p>
+            )}
+
+            <input type="file" multiple accept="image/*" onChange={handleImages} />
+            {errors.images && <p className="text-red-400 text-xs">{errors.images}</p>}
+
+            <button
+              type="submit"
+              className="bg-blue-600 p-3 rounded font-bold"
+              disabled={submitLoading}
+            >
+              {submitLoading ? "Submitting..." : "Submit"}
+            </button>
+
+            {submitError && (
+              <p className="text-red-400 text-sm">{submitError}</p>
+            )}
+          </form>
+        </div>
+
+        {/* TICKETS */}
+        <div>
+          <h2 className="text-xl font-bold mb-4 text-cyan-300">
+            Active Tickets
+          </h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {loading ? (
+              <p>Loading...</p>
+            ) : (
+              activeTickets.map((t) => (
+                <TicketCard key={t.id} t={t} />
+              ))
+            )}
+          </div>
+
+          <h2 className="text-xl font-bold mt-10 mb-4 text-pink-400">
+            Past Tickets
+          </h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {pastTickets.map((t) => (
+              <TicketCard key={t.id} t={t} />
+            ))}
           </div>
         </div>
       </div>
