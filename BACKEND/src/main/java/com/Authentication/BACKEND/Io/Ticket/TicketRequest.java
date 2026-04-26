@@ -3,7 +3,7 @@ package com.Authentication.BACKEND.Io.Ticket;
 import lombok.Data;
 
 import java.util.List;
-
+//dto for ticket request
 @Data
 public class TicketRequest {
 
