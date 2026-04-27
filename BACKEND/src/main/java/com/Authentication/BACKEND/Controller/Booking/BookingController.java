@@ -15,10 +15,10 @@ import com.Authentication.BACKEND.Service.Booking.BookingQrService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-
+//
 
 import java.util.List;
-
+//final booking controller
 @RestController
 @RequestMapping("/bookings")
 @RequiredArgsConstructor
