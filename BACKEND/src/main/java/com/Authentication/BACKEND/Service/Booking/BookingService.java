@@ -6,7 +6,7 @@ import com.Authentication.BACKEND.Io.Booking.BookingRequest;
 import com.Authentication.BACKEND.Io.Booking.BookingResponse;
 
 import java.util.List;
-
+//booking service interface
 public interface BookingService {
 
     BookingResponse createBooking(String email, BookingRequest request);
