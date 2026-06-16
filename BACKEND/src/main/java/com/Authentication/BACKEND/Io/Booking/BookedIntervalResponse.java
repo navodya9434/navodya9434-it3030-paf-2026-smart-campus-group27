@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-
+//final booked interval response file
 @Data
 @AllArgsConstructor
 public class BookedIntervalResponse {

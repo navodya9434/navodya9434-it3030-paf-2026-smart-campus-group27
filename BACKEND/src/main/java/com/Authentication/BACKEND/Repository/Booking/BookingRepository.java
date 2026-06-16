@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+//improved booking repository with conflict check method
 public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
 
     List<BookingEntity> findByUser_Email(String email);
